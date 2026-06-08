@@ -1,18 +1,8 @@
 # dotai
 
-A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
+> Your dotfiles for AI — Claude Code and Codex.
 
-**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes.
-
-## How it works
-
-```
-~/.claude/          ~/.codex/
-    ↕  push / pull      ↕
-      your dotai repo
-```
-
-`sync.sh` reads `manifest.txt` to know what to sync. Files with secrets (API keys) are **sanitized on push** — only redacted templates land in the repo. On pull they arrive as `*.from-sync` so your live files are never overwritten.
+`sync.sh` keeps your skills, prompts, hooks, and settings in sync across machines. Secrets are sanitized on push and never stored in the repo.
 
 ## Quick start
 
@@ -87,18 +77,3 @@ If you have the `dotai-setup` skill installed, you can ask Claude Code to set up
 > "Use dotai-setup to apply my configs to `user@host`"
 
 Claude will inspect the remote machine, compare it with your dotai repo, ask about secrets, merge `settings.local.json` carefully, and apply everything via rsync/scp.
-
-## Repo structure
-
-```
-dotai/
-├── sync.sh              # The engine
-├── manifest.txt         # Declares what to sync
-├── .gitignore           # Allowlist that blocks raw secret files
-├── hooks/
-│   └── pre-commit       # Runs sync.sh scan before every commit
-├── CLAUDE.md            # Starter template — replace with yours
-└── skills/
-    └── dotai-setup/     # Skill: apply dotai to a new machine
-        └── SKILL.md
-```
