@@ -1,0 +1,40 @@
+# Red de seguridad: aunque el sync usa allowlist, esto bloquea fugas
+# si alguna vez se hace `git add -A` por accidente.
+
+# Credenciales y auth (NUNCA)
+**/auth.json
+**/.credentials.json
+**/*.key
+**/*.pem
+
+# Configs reales con secretos (solo se versiona la versión .sanitized.*)
+claude/settings.json
+claude/settings.pro.json
+claude/settings.bedrock.json
+codex/config.toml
+**/config.toml.bak-*
+**/*.from-sync
+
+# Historial / sesiones / estado / caches (ruido y posible info sensible)
+**/history.json
+**/history.jsonl
+**/sessions/
+**/archived_sessions/
+**/projects/
+**/todos/
+**/debug/
+**/telemetry/
+**/statsig/
+**/shell-snapshots/
+**/shell_snapshots/
+**/paste-cache/
+**/file-history/
+**/cache/
+**/*.sqlite
+**/*.sqlite-*
+**/*.log
+
+# SO / lenguajes
+.DS_Store
+**/__pycache__/
+**/*.pyc

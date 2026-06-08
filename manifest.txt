@@ -1,0 +1,38 @@
+# manifest.txt — defines what gets synced between $HOME and this repo
+#
+# Format (3 columns, space-separated):
+#   MODE        HOME_PATH (relative to $HOME)        REPO_PATH (relative to repo root)
+#
+# MODE:
+#   sync      -> direct copy in both directions (file or directory).
+#               push: HOME -> repo (mirror, with --delete on dirs).
+#               pull: repo -> HOME (additive, NEVER deletes local files).
+#   sanitize  -> file containing secrets. push: redacts and saves as template.
+#               pull: does NOT overwrite the real file; writes <file>.from-sync instead.
+#
+# Lines starting with # are comments. Missing paths are skipped with a warning.
+
+# ---------------- Claude Code (~/.claude) ----------------
+sanitize  .claude/settings.json                       settings.sanitized.json
+sync      .claude/CLAUDE.md                            CLAUDE.md
+sync      .claude/skills                               skills
+sync      .claude/hooks                                claude-hooks
+sync      .claude/statusline.sh                        statusline.sh
+sync      .claude/statusline-v1.sh                     statusline-v1.sh
+sync      .claude/claude-mode.sh                       claude-mode.sh
+sanitize  .claude/settings.bedrock.json                settings.bedrock.sanitized.json
+sanitize  .claude/settings.pro.json                    settings.pro.sanitized.json
+sync      .claude/settings.local.json                  settings.local.json
+# plugin manifests (reinstalls them; plugin content lives in their marketplace repos)
+sync      .claude/plugins/installed_plugins.json       plugins/installed_plugins.json
+sync      .claude/plugins/known_marketplaces.json      plugins/known_marketplaces.json
+sync      .claude/plugins/blocklist.json               plugins/blocklist.json
+
+# ---------------- Codex (~/.codex) ----------------
+sanitize  .codex/config.toml                           config.sanitized.toml
+sync      .codex/AGENTS.md                             AGENTS.md
+sync      .codex/skills                                codex-skills
+sync      .codex/hooks                                 codex-hooks
+sync      .codex/hooks.json                            codex-hooks.json
+sync      .codex/rules                                 codex-rules
+sync      .codex/keybindings.json                      codex-keybindings.json

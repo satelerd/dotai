@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# pre-commit: aborta el commit si el escáner detecta secretos en el repo.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/sync.sh" scan
