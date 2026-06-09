@@ -1,8 +1,20 @@
 # dotai
 
-> Your dotfiles for AI — Claude Code and Codex.
+> dotfiles for your AI harness (Claude Code, Codex)
 
-`sync.sh` keeps your skills, prompts, hooks, and settings in sync across machines. Secrets are sanitized on push and never stored in the repo.
+A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
+
+**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes.
+
+## How it works
+
+```
+ Machine A                  GitHub                      Machine B
+ ~/.claude  ──── push ────▶ dotai repo ──── pull ────▶  ~/.claude
+ ~/.codex                                               ~/.codex
+```
+
+`manifest.txt` declares exactly what moves. API keys are redacted on push and arrive as `*.from-sync` on pull, so your live files are never overwritten.
 
 ## Quick start
 
@@ -40,7 +52,7 @@ git config core.hooksPath hooks
 
 After pull:
 1. Files with secrets land as `*.from-sync` (e.g. `settings.json.from-sync`). Review them, inject your real API keys from your secrets store, and rename to the real filename.
-2. Reinstall plugins — Claude Code auto-installs them on next launch when `enabledPlugins` is set.
+2. Reinstall plugins: Claude Code auto-installs them on next launch when `enabledPlugins` is set.
 3. Install any skill/hook dependencies (e.g. `jq`, `rsync`, tool-specific CLIs).
 
 ## Commands
@@ -48,7 +60,7 @@ After pull:
 | Command | What it does |
 |---|---|
 | `./sync.sh push` | `HOME → repo`. Sanitizes secrets, then runs the scanner. |
-| `./sync.sh pull` | `repo → HOME`. Additive — never deletes your local files. |
+| `./sync.sh pull` | `repo → HOME`. Additive, never deletes your local files. |
 | `./sync.sh status` | Shows what differs between HOME and the repo. No writes. |
 | `./sync.sh scan` | Scans the repo tree for secrets. Exits non-zero if found. |
 
@@ -68,7 +80,7 @@ Defined in `manifest.txt`. Add or remove entries to match your setup.
 | Claude Code | `CLAUDE.md`, `skills/`, `claude-hooks/`, `statusline*.sh`, `settings.*.json` (redacted), plugin manifests, `settings.local.json` | history, sessions, projects, todos, caches, `auth.json`, `settings.json` (raw) |
 | Codex | `AGENTS.md`, `codex-skills/`, `codex-hooks/`, `codex-rules/`, `codex-keybindings.json`, `config.toml` (redacted) | memories (they have their own git), history |
 
-Plugin **content** is not vendored — it lives in its marketplace repo with `autoUpdate`. Only the manifest that reinstalls them is synced.
+Plugin **content** is not vendored; it lives in its marketplace repo with `autoUpdate`. Only the manifest that reinstalls them is synced.
 
 ## Setting up on a new machine (with the dotai-setup skill)
 
