@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# dotai — entrypoint for the dotai toolkit.
+#
+#   dotai sync   push|pull|status|scan      # config sync (see sync.sh)
+#   dotai tp     [HOST] [--session ID]       # teleport a live conversation
+#   dotai teleport ...                       # alias of tp
+#
+# Tip: symlink this into your PATH:
+#   ln -s "$PWD/dotai" ~/.local/bin/dotai
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+sub="${1:-}"; shift || true
+case "$sub" in
+  sync)            exec "$ROOT/sync.sh" "$@" ;;
+  tp|teleport)     exec "$ROOT/teleport.sh" send "$@" ;;
+  _receive)        exec "$ROOT/teleport.sh" receive "$@" ;;  # internal
+  push|pull|status|scan)  exec "$ROOT/sync.sh" "$sub" "$@" ;;  # convenience passthrough
+  *) cat <<EOF
+dotai — dotfiles + teleport for your AI harness.
+
+  dotai sync push      back up ~/.claude and ~/.codex configs to the repo
+  dotai sync pull      restore configs on a new machine
+  dotai sync status    diff HOME vs repo
+  dotai sync scan      scan repo for secrets
+
+  dotai tp [HOST]      teleport the current Claude Code conversation to HOST
+                       (HOST defaults to DOTAI_TP_HOST in .dotai.conf)
+       --session ID    pick a specific session instead of the latest
+       --no-tmux       don't auto-start tmux on the target
+
+Examples:
+  dotai tp                       # send latest session to your default host
+  dotai tp user@mini             # explicit host
+  dotai tp --session ab12… mini  # a specific conversation
+EOF
+    exit 1 ;;
+esac
