@@ -1,0 +1,16 @@
+# .dotai.conf.example — copy to .dotai.conf and fill in.
+#   cp .dotai.conf.example .dotai.conf
+#
+# .dotai.conf is gitignored: it holds machine-specific values (host, paths)
+# that must never be committed to a public repo.
+
+# SSH target for `dotai tp`. A Tailscale hostname or IP works great.
+#   DOTAI_TP_HOST="you@your-mini"
+DOTAI_TP_HOST=""
+
+# Where repos get cloned on the TARGET machine.
+DOTAI_TP_BASE="$HOME/code"
+
+# 1 = land the teleported session inside a tmux session on the target,
+#     so you can reattach from your phone over mosh. 0 = just print the command.
+DOTAI_TP_TMUX=1
