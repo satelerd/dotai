@@ -9,11 +9,22 @@
 # from your phone over mosh.
 #
 # Usage:
-#   teleport.sh send    [HOST] [--session ID] [--harness claude] [--no-tmux]
+#   teleport.sh send    [HOST] [--session ID] [--into DIR] [--harness claude] [--no-tmux]
 #   teleport.sh receive <payload-dir>            # internal: runs on the target
 #
+#   --into DIR   land the repo under DIR on the target (default: DOTAI_TP_BASE,
+#                i.e. ~/code). A bare name is relative to the target's $HOME, so
+#                `--into work` lands it in ~/work there (absolute paths too).
+#
 # v1 supports Claude Code only (Codex detection prints a friendly "not yet").
-# The transcript is the deliverable; repo state is best-effort.
+#
+# Repo landing on the target (matched by remote URL, not folder name):
+#   · not cloned there  -> clone into $DOTAI_TP_BASE/<repo> and work there
+#   · already cloned     -> carve a dedicated git worktree on a fresh tp/<stamp>
+#                           branch under $DOTAI_TP_BASE/.tp/<repo>/, leaving the
+#                           existing checkout untouched (no obstruction).
+# Local-only commits travel in a git bundle, so HEAD resolves even when it was
+# never pushed. Everything is additive: no session or checkout is clobbered.
 #
 # Config (gitignored .dotai.conf in the repo root, or ~/.dotai.conf):
 #   DOTAI_TP_HOST="user@host"     # ssh target (Tailscale name/IP works)
@@ -48,16 +59,71 @@ realpath_p() { python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' 
 # Claude Code encodes a project dir as its resolved cwd with every "/" -> "-".
 encode_cwd() { printf '%s' "$(realpath_p "$1")" | sed 's:/:-:g'; }
 
+# Normalize a git remote URL to host/owner/repo so ssh and https forms match,
+# and embedded credentials never break the comparison.
+norm_url() {
+  python3 - "$1" <<'PY'
+import re, sys
+u = sys.argv[1].strip()
+u = re.sub(r'^git@([^:]+):', r'\1/', u)   # git@host:path -> host/path
+u = re.sub(r'^[a-zA-Z]+://', '', u)       # drop scheme (https://, ssh://)
+u = re.sub(r'^[^/@]+@', '', u)            # drop user[:pass]@ (embedded creds)
+u = re.sub(r'\.git$', '', u).rstrip('/').lower()
+print(u)
+PY
+}
+
+# Find an existing clone of URL one level under base. Echoes its path or nothing.
+find_clone() {
+  local base="$1" url="$2" want d got
+  want="$(norm_url "$url")"
+  for d in "$base"/*/; do
+    [[ -d "$d/.git" ]] || continue
+    got="$(git -C "$d" remote get-url origin 2>/dev/null || true)"
+    [[ -n "$got" ]] || continue
+    if [[ "$(norm_url "$got")" == "$want" ]]; then printf '%s' "${d%/}"; return 0; fi
+  done
+  return 0   # no match: echo nothing, never fail the caller under set -e
+}
+
+# Make sure $HEAD's commit object exists in repo $1: it may be a local-only
+# commit (closed the lid mid-work). Try origin, then the carried bundle.
+ensure_head() {
+  local d="$1"
+  [[ -n "$HEAD" ]] || return 0
+  git -C "$d" cat-file -e "${HEAD}^{commit}" 2>/dev/null && return 0
+  git -C "$d" fetch origin -q 2>/dev/null || true
+  git -C "$d" cat-file -e "${HEAD}^{commit}" 2>/dev/null && return 0
+  if [[ -n "$HAS_BUNDLE" && -f "$payload/commits.bundle" ]]; then
+    git -C "$d" fetch "$payload/commits.bundle" 'HEAD' -q 2>/dev/null || true
+  fi
+  return 0
+}
+
+# Apply the carried uncommitted patch + untracked files into dir $1.
+apply_changes() {
+  local d="$1"
+  if [[ -n "$HAS_PATCH" && -f "$payload/uncommitted.patch" ]]; then
+    git -C "$d" apply --whitespace=nowarn "$payload/uncommitted.patch" 2>/dev/null \
+      && ok "  · applied uncommitted changes" \
+      || warn "  · patch didn't apply cleanly (resolve manually): $payload/uncommitted.patch"
+  fi
+  if [[ -n "$HAS_UNTRACKED" && -f "$payload/untracked.tar.gz" ]]; then
+    tar -xzf "$payload/untracked.tar.gz" -C "$d" 2>/dev/null && ok "  · restored untracked files"
+  fi
+}
+
 # ===========================================================================
 # SEND  (runs on the source machine, e.g. the laptop)
 # ===========================================================================
 cmd_send() {
   need python3; need rsync; need ssh; need git
-  local host="" session="" harness="claude" use_tmux="$DOTAI_TP_TMUX"
+  local host="" session="" harness="claude" use_tmux="$DOTAI_TP_TMUX" dest=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --session) session="$2"; shift 2 ;;
       --harness) harness="$2"; shift 2 ;;
+      --into|--dest) dest="$2"; shift 2 ;;
       --no-tmux) use_tmux=0; shift ;;
       --tmux)    use_tmux=1; shift ;;
       -*) die "Unknown flag: $1" ;;
@@ -120,13 +186,24 @@ cmd_send() {
     fi
   fi
 
-  python3 - "$stage/tp.json" "$harness" "$session" "$cwd" "$url" "$branch" "$head" "$repo_name" "$has_patch" "$has_untracked" <<'PY'
+  # Bundle history reachable from HEAD so local-only commits travel too: the
+  # classic case (closed the lid mid-work) means HEAD isn't on origin yet, so a
+  # plain `git fetch` on the target can't reach it. The bundle is self-contained.
+  local has_bundle=false
+  if [[ "$in_git" == 1 && -n "$head" ]]; then
+    if git bundle create "$stage/commits.bundle" HEAD >/dev/null 2>&1; then
+      has_bundle=true
+    else rm -f "$stage/commits.bundle"; fi
+  fi
+
+  python3 - "$stage/tp.json" "$harness" "$session" "$cwd" "$url" "$branch" "$head" "$repo_name" "$has_patch" "$has_untracked" "$has_bundle" <<'PY'
 import json, sys
-(_, out, harness, sid, cwd, url, branch, head, repo_name, has_patch, has_untracked) = sys.argv
+(_, out, harness, sid, cwd, url, branch, head, repo_name, has_patch, has_untracked, has_bundle) = sys.argv
 json.dump({
     "version": 1, "harness": harness, "session_id": sid, "source_cwd": cwd,
     "repo": {"url": url, "branch": branch, "head": head,
-             "has_patch": has_patch == "true", "has_untracked": has_untracked == "true"},
+             "has_patch": has_patch == "true", "has_untracked": has_untracked == "true",
+             "has_bundle": has_bundle == "true"},
     "repo_name": repo_name,
 }, open(out, "w"), indent=2)
 PY
@@ -136,11 +213,16 @@ PY
   stamp="$(date +%Y%m%d_%H%M%S)_$$"
   remote=".cache/dotai-tp/$stamp"
   info "▶ Sending to $host:~/$remote"
+  [[ -n "$dest" ]] && info "  · landing under: $dest (overrides DOTAI_TP_BASE on the target)"
   ssh "$host" "mkdir -p \"\$HOME/$remote\""
   rsync -a "$stage"/ "$host:$remote/"
   echo
+  # Build the env prefix for the remote receive. DOTAI_TP_DEST (from --into) is a
+  # dedicated var so the target's sourced .dotai.conf can't clobber it.
+  local envp="DOTAI_TP_TMUX=$use_tmux"
+  [[ -n "$dest" ]] && envp="$envp DOTAI_TP_DEST=$(printf '%q' "$dest")"
   # The receiver prints the resume instructions; we just relay its output.
-  ssh "$host" "DOTAI_TP_TMUX=$use_tmux bash \"\$HOME/$remote/teleport.sh\" receive \"\$HOME/$remote\""
+  ssh "$host" "$envp bash \"\$HOME/$remote/teleport.sh\" receive \"\$HOME/$remote\""
 }
 
 # ===========================================================================
@@ -168,41 +250,69 @@ out("BRANCH", r.get("branch", ""))
 out("HEAD", r.get("head", ""))
 out("HAS_PATCH", "1" if r.get("has_patch") else "")
 out("HAS_UNTRACKED", "1" if r.get("has_untracked") else "")
+out("HAS_BUNDLE", "1" if r.get("has_bundle") else "")
 PY
 )"
 
   [[ "$HARNESS" == "claude" ]] || die "receive: unsupported harness '$HARNESS'"
 
-  local base; base="$(eval echo "${DOTAI_TP_BASE}")"
-  local target="$base/$REPO_NAME"
+  # Resolve the base where the repo lands on THIS (target) machine.
+  # --into <dir> (carried as DOTAI_TP_DEST) overrides the configured DOTAI_TP_BASE.
+  # A bare name like "work" is taken relative to the TARGET's $HOME, so you
+  # never have to worry about ~ expanding on the source. Absolute paths win as-is.
+  local base
+  if [[ -n "${DOTAI_TP_DEST:-}" ]]; then
+    case "$DOTAI_TP_DEST" in
+      /*)        base="$DOTAI_TP_DEST" ;;
+      "~"|"~/"*) base="$(eval echo "$DOTAI_TP_DEST")" ;;
+      *)         base="$HOME/$DOTAI_TP_DEST" ;;
+    esac
+  else
+    base="$(eval echo "$DOTAI_TP_BASE")"
+  fi
+  mkdir -p "$base"
+  local stamp; stamp="$(date +%Y%m%d_%H%M%S)_$$"
+  local workdir=""
 
-  # ---- Repo: clone fresh, or reuse an existing checkout (never clobber) -
+  # ---- Land the repo without ever clobbering work already on this machine --
+  # Match by remote URL (not basename): if this repo is already cloned here,
+  # carve a dedicated git worktree on a fresh branch so concurrent work in the
+  # main checkout stays untouched. If it isn't here yet, clone it and work there.
   if [[ -n "$URL" ]]; then
-    if [[ ! -d "$target/.git" ]]; then
+    local main; main="$(find_clone "$base" "$URL")"
+    if [[ -z "$main" ]]; then
+      local target="$base/$REPO_NAME"
+      [[ -e "$target" ]] && target="$base/$REPO_NAME-tp-$stamp"   # avoid name clash
       info "▶ Cloning $URL → $target"
-      mkdir -p "$base"
       git clone "$URL" "$target" >/dev/null 2>&1 || die "clone failed: $URL"
+      ensure_head "$target"
       ( cd "$target"
-        git fetch origin >/dev/null 2>&1 || true
         git checkout "$BRANCH" >/dev/null 2>&1 || git checkout -b "$BRANCH" >/dev/null 2>&1 || true
-        [[ -n "$HEAD" ]] && git reset --hard "$HEAD" >/dev/null 2>&1 || true
-        if [[ -n "$HAS_PATCH" && -f "$payload/uncommitted.patch" ]]; then
-          git apply --whitespace=nowarn "$payload/uncommitted.patch" 2>/dev/null \
-            && ok "  · applied uncommitted changes" || warn "  · patch didn't apply cleanly (resolve manually): $payload/uncommitted.patch"
-        fi
-        [[ -n "$HAS_UNTRACKED" && -f "$payload/untracked.tar.gz" ]] && tar -xzf "$payload/untracked.tar.gz" -C "$target" 2>/dev/null && ok "  · restored untracked files"
-      )
+        [[ -n "$HEAD" ]] && git reset --hard "$HEAD" >/dev/null 2>&1 || true )
+      apply_changes "$target"
+      workdir="$target"
     else
-      warn "▶ $target already exists — leaving it untouched (no clobber)."
-      warn "  · Your local checkout is preserved. Carried patch (if any): $payload/uncommitted.patch"
+      info "▶ Repo already here: $main"
+      ensure_head "$main"
+      local wt="$base/.tp/$REPO_NAME/$stamp"
+      mkdir -p "$base/.tp/$REPO_NAME"
+      if [[ -n "$HEAD" ]] && git -C "$main" worktree add -b "tp/$stamp" "$wt" "$HEAD" >/dev/null 2>&1; then
+        ok "  · worktree on branch tp/$stamp at ${HEAD:0:8} → $wt"
+      else
+        git -C "$main" worktree add -b "tp/$stamp" "$wt" >/dev/null 2>&1 \
+          || die "worktree add failed in $main (branch tp/$stamp)"
+        warn "  · teleported HEAD ${HEAD:0:8} unavailable — worktree off $main's HEAD (patch may not apply cleanly)"
+      fi
+      apply_changes "$wt"
+      workdir="$wt"
     fi
   else
-    target="$(eval echo "${DOTAI_TP_BASE}")/$REPO_NAME"
-    mkdir -p "$target"
-    warn "▶ No repo URL in payload — placing the transcript against $target only."
+    workdir="$base/$REPO_NAME"
+    mkdir -p "$workdir"
+    warn "▶ No repo URL in payload — placing the transcript against $workdir only."
   fi
 
-  local tcwd; tcwd="$(realpath_p "$target")"
+  local tcwd; tcwd="$(realpath_p "$workdir")"
 
   # ---- Place the transcript (additive; refuse to clobber) --------------
   local enc proj dst
@@ -273,9 +383,11 @@ main() {
     *) cat <<EOF
 teleport.sh — move a live AI conversation to another machine.
 
-  teleport.sh send [HOST] [--session ID] [--no-tmux]
+  teleport.sh send [HOST] [--session ID] [--into DIR] [--no-tmux]
       Package the current Claude Code session + repo state and send it.
       HOST defaults to DOTAI_TP_HOST from .dotai.conf.
+      --into DIR lands the repo under DIR (default ~/code). A bare name is
+      relative to the target's home: --into work → ~/work on the target.
 
   teleport.sh receive <payload-dir>
       (internal) Runs on the target; clones the repo and places the session.
