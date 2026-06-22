@@ -17,7 +17,7 @@ A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (
 `manifest.txt` declares exactly what moves. API keys are redacted on push and arrive as `*.from-sync` on pull, so your live files are never overwritten.
 
 Beyond syncing configs, dotai can move a **live conversation** to another machine. 
-While working with your agents, you can move the *same thread* (full history + the repo it lives in) to another, ready to resume. One command:
+While working with your agents, you can move the *same thread* (full history + the repo it lives in) to another machine, ready to resume. One command:
 
 ```bash
 dotai tp me@mini          # send THIS conversation to another machine
@@ -128,7 +128,7 @@ How the repo lands on the target:
 
 Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`). v1 is Claude Code only.
 
-**tmux** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
+**tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 
 **Let an agent teleport itself.** The `teleport` skill lets Claude move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` and runs the send for you.
 
