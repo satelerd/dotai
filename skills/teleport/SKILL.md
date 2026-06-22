@@ -23,8 +23,9 @@ On the target the repo is matched **by remote URL**, not by folder name:
   `tp/<stamp>` branch under `~/code/.tp/<repo>/`. The existing checkout is never
   touched, so work in progress on the target isn't obstructed.
 
-Then it places the transcript, pre-accepts the trust dialog, and (default) lands
-the session in a **tmux** session you can reattach from your phone over mosh.
+Then it places the transcript and pre-accepts the trust dialog. By default it
+just prints the `claude -r` command to resume; pass `--tmux` to land the session
+in a **tmux** session you can reattach from your phone over mosh.
 
 ## How to run it
 
@@ -47,8 +48,8 @@ the session in a **tmux** session you can reattach from your phone over mosh.
    DOTAI="$(command -v dotai || echo "$HOME/code/dotai/dotai")"
    "$DOTAI" tp <host> --session "$CLAUDE_CODE_SESSION_ID"
    ```
-   Add `--no-tmux` if the user just wants the session placed (prints the
-   `claude -r` command instead of starting tmux).
+   By default it just places the session and prints the `claude -r` command to
+   resume. Add `--tmux` if the user wants it inside tmux (for mosh reattach).
 
    **Routing the destination.** By default the repo lands under `~/code` on the
    target. If the user says where it should go ("put it in my work folder"),
@@ -56,7 +57,11 @@ the session in a **tmux** session you can reattach from your phone over mosh.
    on the target — so a `~` or `$HOME` doesn't get expanded on the source by
    mistake. Absolute paths work too.
 
-5. **Relay the output verbatim** — it prints how to reattach:
+5. **Relay the output verbatim** — by default it prints the resume command:
+   ```
+   cd <target-path> && claude -r <session-id>   # on the target
+   ```
+   With `--tmux` it instead prints how to reattach:
    ```
    tmux attach -t tp-<repo>           # on the target
    mosh <host> -- tmux attach -t tp-<repo>   # from your phone

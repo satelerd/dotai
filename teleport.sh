@@ -9,7 +9,7 @@
 # from your phone over mosh.
 #
 # Usage:
-#   teleport.sh send    [HOST] [--session ID] [--into DIR] [--harness claude] [--no-tmux]
+#   teleport.sh send    [HOST] [--session ID] [--into DIR] [--harness claude] [--tmux]
 #   teleport.sh receive <payload-dir>            # internal: runs on the target
 #
 #   --into DIR   land the repo under DIR on the target (default: DOTAI_TP_BASE,
@@ -29,7 +29,7 @@
 # Config (gitignored .dotai.conf in the repo root, or ~/.dotai.conf):
 #   DOTAI_TP_HOST="user@host"     # ssh target (Tailscale name/IP works)
 #   DOTAI_TP_BASE="$HOME/code"    # where repos get cloned on the target
-#   DOTAI_TP_TMUX=1               # 1 = land the session inside tmux on target
+#   DOTAI_TP_TMUX=1               # opt-in: default off; set 1 to always use tmux here
 
 set -euo pipefail
 
@@ -49,7 +49,7 @@ for cfg in "$REPO_ROOT/.dotai.conf" "$HOME/.dotai.conf"; do
 done
 : "${DOTAI_TP_HOST:=}"
 : "${DOTAI_TP_BASE:=$HOME/code}"
-: "${DOTAI_TP_TMUX:=1}"
+: "${DOTAI_TP_TMUX:=0}"   # tmux is opt-in: 0 = off by default (use --tmux, or set 1 here)
 
 need() { command -v "$1" >/dev/null 2>&1 || die "Missing dependency: $1"; }
 
@@ -362,7 +362,7 @@ PY
   echo
   ok "✓ Session ${SID:0:8}… ready on this machine."
   local resume="cd $(printf '%q' "$tcwd") && claude -r $SID"
-  if [[ "${DOTAI_TP_TMUX:-1}" == "1" ]] && command -v tmux >/dev/null 2>&1; then
+  if [[ "${DOTAI_TP_TMUX:-0}" == "1" ]] && command -v tmux >/dev/null 2>&1; then
     local sess="tp-$REPO_NAME"
     if tmux has-session -t "$sess" 2>/dev/null; then sess="tp-$REPO_NAME-$(date +%H%M%S)"; fi
     tmux new-session -d -s "$sess" -c "$tcwd" "claude -r $SID"
@@ -383,11 +383,12 @@ main() {
     *) cat <<EOF
 teleport.sh — move a live AI conversation to another machine.
 
-  teleport.sh send [HOST] [--session ID] [--into DIR] [--no-tmux]
+  teleport.sh send [HOST] [--session ID] [--into DIR] [--tmux]
       Package the current Claude Code session + repo state and send it.
       HOST defaults to DOTAI_TP_HOST from .dotai.conf.
       --into DIR lands the repo under DIR (default ~/code). A bare name is
       relative to the target's home: --into work → ~/work on the target.
+      --tmux lands the session inside tmux on the target (default: off).
 
   teleport.sh receive <payload-dir>
       (internal) Runs on the target; clones the repo and places the session.

@@ -8,7 +8,7 @@ set -u
 TP=/opt/dotai/teleport.sh
 HOST=tester@localhost
 export DOTAI_TP_BASE="$HOME/code"
-export DOTAI_TP_TMUX=1
+export DOTAI_TP_TMUX=1   # tmux default is now OFF; force it on so these scenarios exercise the tmux path
 export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
 
 PASS=0; FAIL=0

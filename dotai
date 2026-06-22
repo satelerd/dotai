@@ -31,7 +31,7 @@ dotai — dotfiles + teleport for your AI harness.
        --session ID    pick a specific session instead of the latest
        --into DIR      land the repo under DIR on the target (default ~/code;
                        a bare name like "work" is relative to the target home)
-       --no-tmux       don't auto-start tmux on the target
+       --tmux          land the session inside tmux on the target (default: off)
 
 Examples:
   dotai tp                       # send latest session to your default host
