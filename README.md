@@ -4,9 +4,7 @@
 
 A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
 
-**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes.
-
-It also bundles **[teleport](#teleport)** — move a *live* Claude Code conversation (full history + the repo it lives in) to another machine and pick it up there.
+**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there.
 
 ## How it works
 
@@ -18,15 +16,14 @@ It also bundles **[teleport](#teleport)** — move a *live* Claude Code conversa
 
 `manifest.txt` declares exactly what moves. API keys are redacted on push and arrive as `*.from-sync` on pull, so your live files are never overwritten.
 
-## Teleport
-
-Beyond syncing configs, dotai can move a **live conversation** to another machine. The classic case: you're working in Claude Code on your laptop, you close the lid, and the *same thread* — full history plus the repo it lives in — lands on your Mac mini, ready to resume. One command:
+Beyond syncing configs, dotai can move a **live conversation** to another machine. 
+While working with your agents, you can move the *same thread* (full history + the repo it lives in) to another, ready to resume. One command:
 
 ```bash
 dotai tp me@mini          # send THIS conversation to another machine
 ```
 
-It carries the session transcript, the repo (cloned or worktree'd on the target), your uncommitted changes, and even local-only commits. Full mechanics in [Teleport in depth](#teleport-in-depth) below.
+It carries the session transcript, the repo (cloned or worktree'd on the target), your uncommitted changes, and even local-only commits.
 
 ## Quick start
 
@@ -122,7 +119,7 @@ By default the repo lands under `~/code` on the target. `--into <dir>` routes it
 
 What travels: the session transcript, the repo's origin URL + branch + HEAD, your uncommitted patch, untracked files, **and a bundle of local-only commits** (so a HEAD you never pushed still resolves on the target).
 
-How the repo lands on the target — matched **by remote URL, not folder name**:
+How the repo lands on the target:
 
 | On the target | What happens |
 |---|---|
@@ -131,7 +128,7 @@ How the repo lands on the target — matched **by remote URL, not folder name**:
 
 Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`). v1 is Claude Code only.
 
-**tmux is opt-in.** By default teleport just places the session and prints the `claude -r` command. Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
+**tmux** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 
 **Let an agent teleport itself.** The `teleport` skill lets Claude move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` and runs the send for you.
 
@@ -139,14 +136,13 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
 
 **Known limits**
 
-- The Docker suite verifies the **mechanics** (transport, clone, worktree, bundle, transcript placement). It does **not** prove `claude -r` reopens the same thread — that needs one real laptop→mini run (teleport, resume, confirm it continues).
 - URL matching scans **one level** (`$DOTAI_TP_BASE/*/`). A nested layout (`~/code/<namespace>/<repo>`) won't match, so teleport would clone a duplicate instead of worktree-ing the real one.
 - **No automatic cleanup** of teleport worktrees. They pile up under `$DOTAI_TP_BASE/.tp/<repo>/` on `tp/<stamp>` branches. To prune:
   ```bash
   rm -rf ~/code/.tp/<repo>/<stamp> && git -C ~/code/<repo> worktree prune
   ```
 
-## Setting up on a new machine (with the dotai-setup skill)
+## Setting up on a new machine
 
 If you have the `dotai-setup` skill installed, you can ask Claude Code to set up a remote machine over SSH:
 
