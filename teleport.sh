@@ -191,12 +191,18 @@ cmd_send() {
     fi
   fi
 
-  # Bundle history reachable from HEAD so local-only commits travel too: the
-  # classic case (closed the lid mid-work) means HEAD isn't on origin yet, so a
-  # plain `git fetch` on the target can't reach it. The bundle is self-contained.
+  # Bundle ONLY the local-only commits (HEAD minus whatever the remotes already
+  # have) so a HEAD that was never pushed still resolves on the target — the
+  # classic "closed the lid mid-work" case. Excluding --remotes is critical:
+  # `git bundle create … HEAD` alone packs the repo's ENTIRE history (every blob),
+  # which on a large repo balloons to hundreds of MB and stalls the transfer. The
+  # bundle then carries prerequisites (the boundary commits already on origin),
+  # which the target has after cloning/fetching, so `git fetch <bundle> HEAD`
+  # works. If HEAD is already on a remote, the range is empty and no bundle is
+  # made — ensure_head() finds HEAD via plain `git fetch origin` instead.
   local has_bundle=false
   if [[ "$in_git" == 1 && -n "$head" ]]; then
-    if git bundle create "$stage/commits.bundle" HEAD >/dev/null 2>&1; then
+    if git bundle create "$stage/commits.bundle" HEAD --not --remotes >/dev/null 2>&1; then
       has_bundle=true
     else rm -f "$stage/commits.bundle"; fi
   fi

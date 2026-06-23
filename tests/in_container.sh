@@ -181,6 +181,29 @@ F_WHEAD="$([[ -n "$WT" ]] && git -C "$WT" rev-parse HEAD 2>/dev/null || echo non
 [[ -n "$WT" ]] && bytematch "$HOME/work/foxtrot" "$WT" "F"
 
 # ===========================================================================
+hd "H · pushed HEAD → no full-history bundle in the payload (regression)"
+# Regression for the stall bug: `git bundle create … HEAD` (no --not --remotes)
+# packed the repo's ENTIRE history — every blob — into the payload, ballooning to
+# hundreds of MB on a real repo and dragging the transfer to a crawl. With HEAD
+# already on origin the local-only range is empty, so NO bundle must be produced.
+# The big blob below would make a full-history bundle fat and obvious; we assert
+# the real payload the engine rsynced to the target carries no commits.bundle.
+reset_all; init_origin hotel
+git clone -q "$ORIGIN_URL" "$HOME/work/hotel"
+( cd "$HOME/work/hotel"
+  head -c 300000 /dev/urandom > big.bin                          # ~300KB blob…
+  git add big.bin; git commit -qm "big blob"; git push -q origin HEAD:main )  # …pushed → HEAD on origin
+( cd "$HOME/work/hotel"; echo "wip-h" >> README.md )             # only uncommitted, no local commit
+make_session "$HOME/work/hotel" "$SID"
+send "$HOME/work/hotel" "$SID" >/dev/null 2>&1 || no "H send failed"
+H_BUNDLE="$(ls "$HOME"/.cache/dotai-tp/*/commits.bundle 2>/dev/null | head -1)"
+[[ -z "$H_BUNDLE" ]] && ok "no commits.bundle in payload (pushed HEAD → empty range)" \
+  || no "full-history bundle leaked: $(du -h "$H_BUNDLE" 2>/dev/null | cut -f1)"
+WD="$HOME/code/hotel"                                            # receive still resolves HEAD via origin
+[[ "$(git -C "$WD" rev-parse HEAD 2>/dev/null)" == "$(git -C "$HOME/work/hotel" rev-parse HEAD)" ]] \
+  && ok "target HEAD resolved via origin (no bundle needed)" || no "target HEAD mismatch without bundle"
+
+# ===========================================================================
 hd "G · --into <name> routes to a custom base, relative to target home"
 reset_all; init_origin golf
 git clone -q "$ORIGIN_URL" "$HOME/work/golf"

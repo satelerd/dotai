@@ -39,21 +39,20 @@ in a **tmux** session you can reattach from your phone over mosh.
    was launched in). Teleport finds the session under that directory's project
    folder. If you `cd`'d elsewhere, go back to the repo root first.
 
-3. **Resolve the target host — don't ask if you don't have to, and NEVER invent one.**
-   First check for a configured host:
-   ```bash
-   cat ./.dotai.conf "$HOME/.dotai.conf" 2>/dev/null | grep DOTAI_TP_HOST
-   ```
-   Then, in order:
-   - If the user named a **full** host (`user@host`), use exactly that.
-   - Else if `.dotai.conf` has `DOTAI_TP_HOST`, **run `dotai tp` with NO host argument** —
-     the script reads it for you. Don't pass a host, don't ask.
-   - Only if there is **neither** a user-named host **nor** a `DOTAI_TP_HOST`, ask for one.
+3. **Resolve the target host — let the engine read the config; don't re-derive it.**
+   The engine (`teleport.sh`) already loads `DOTAI_TP_HOST` from `.dotai.conf` next to
+   the script, then from `$HOME`. **Do not grep for the config yourself** — you'd look in
+   the working directory (where the conversation lives, e.g. some product repo) and miss the
+   config that sits next to `dotai`, get a false "no host", and wrongly start asking. Instead:
+   - If the user named a **full** host (`user@host`), pass exactly that.
+   - Otherwise, **run `dotai tp` with NO host argument** and let the engine resolve it.
+   - Only if the engine itself fails with **"No target host"**, ask the user for a `user@host`
+     and re-run with it.
 
    **Never build a host yourself.** Do not take a hostname from Tailscale / mDNS / ssh config
    and prepend the *local* username — the remote user is almost never the same (`sat@mini-sat`
-   fails when the mini's user is `minisat`). The full `user@host` comes from the config or from
-   what the user literally typed — nowhere else.
+   fails when the mini's user is `minisat`). The full `user@host` comes from the config (via
+   the engine) or from what the user literally typed — nowhere else.
 
 4. **Locate dotai and send**, passing this exact session so there's no guessing.
    Omit the host when it comes from `.dotai.conf`:
