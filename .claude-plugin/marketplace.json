@@ -1,0 +1,15 @@
+{
+  "name": "dotai",
+  "description": "dotfiles + teleport for your AI harness. Install the teleport and dotai-setup skills directly from this repo.",
+  "owner": {
+    "name": "satelerd",
+    "url": "https://github.com/satelerd/dotai"
+  },
+  "plugins": [
+    {
+      "name": "dotai",
+      "description": "Teleport a live Claude Code conversation between machines, and apply your dotai configs to a new machine over SSH. Bundles the `teleport` and `dotai-setup` skills.",
+      "source": "."
+    }
+  ]
+}
