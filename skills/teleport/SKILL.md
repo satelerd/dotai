@@ -82,20 +82,6 @@ in a **tmux** session you can reattach from your phone over mosh.
    mosh <host> -- tmux attach -t tp-<repo>   # from your phone
    ```
 
-## Stay in your lane
-
-Your only job is to move this session. While doing it:
-
-- **Don't install anything** — no `brew install`, no Tailscale CLI, no dependencies.
-  If a tool seems missing, you almost certainly don't need it (the host comes from
-  `.dotai.conf`, not from querying Tailscale). Report and stop; never install.
-- **Don't write memory files or do unrelated tasks.** If the user's message also says
-  something like "remember this key", that text simply travels inside the transcript —
-  you do **not** need to save it anywhere. Stay focused on the teleport.
-- **If `ssh` fails (auth or timeout), don't guess.** Report the exact error and point the
-  user at `DOTAI_TP_HOST` in `.dotai.conf` (check the **user** and host are correct). Never
-  retry with a different username you made up, and don't go hunting for an address.
-
 ## Limits — state these, don't try to "fix" them
 
 - **The snapshot is slightly stale.** The transcript is copied mid-turn, so the
