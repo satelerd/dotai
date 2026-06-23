@@ -56,8 +56,13 @@ need() { command -v "$1" >/dev/null 2>&1 || die "Missing dependency: $1"; }
 # realpath that works even if the path is a symlink (macOS /tmp -> /private/tmp).
 realpath_p() { python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1"; }
 
-# Claude Code encodes a project dir as its resolved cwd with every "/" -> "-".
-encode_cwd() { printf '%s' "$(realpath_p "$1")" | sed 's:/:-:g'; }
+# Claude Code names a project dir from the resolved cwd by replacing EVERY
+# non-alphanumeric char with "-" — "/", ".", "_", space all become "-", and runs
+# are NOT collapsed ("/code/.tp" -> "-code--tp"). This MUST match Claude's
+# internal rule exactly or `claude -r` won't find the moved session on the
+# target. Verified against a real project dir (2026-06-22). Self-tested via the
+# internal `_encode` subcommand. If a Claude Code version changes this, update here.
+encode_cwd() { printf '%s' "$(realpath_p "$1")" | sed 's/[^a-zA-Z0-9]/-/g'; }
 
 # Normalize a git remote URL to host/owner/repo so ssh and https forms match,
 # and embedded credentials never break the comparison.
@@ -210,7 +215,7 @@ PY
 
   # ---- Transfer + run receiver on the target ---------------------------
   local stamp remote
-  stamp="$(date +%Y%m%d_%H%M%S)_$$"
+  stamp="$(date +%Y-%m-%d-%H%M%S)"   # readable + hyphen-safe under encode_cwd
   remote=".cache/dotai-tp/$stamp"
   info "▶ Sending to $host:~/$remote"
   [[ -n "$dest" ]] && info "  · landing under: $dest (overrides DOTAI_TP_BASE on the target)"
@@ -271,7 +276,7 @@ PY
     base="$(eval echo "$DOTAI_TP_BASE")"
   fi
   mkdir -p "$base"
-  local stamp; stamp="$(date +%Y%m%d_%H%M%S)_$$"
+  local stamp; stamp="$(date +%Y-%m-%d-%H%M%S)"   # readable; branch tp/<stamp>, worktree .tp/<repo>/<stamp>
   local workdir=""
 
   # ---- Land the repo without ever clobbering work already on this machine --
@@ -380,6 +385,7 @@ main() {
   case "$sub" in
     send)    cmd_send "$@" ;;
     receive) cmd_receive "$@" ;;
+    _encode) encode_cwd "$1" ;;   # internal: expose the cwd->project-dir rule for tests
     *) cat <<EOF
 teleport.sh — move a live AI conversation to another machine.
 

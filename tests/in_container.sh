@@ -17,7 +17,7 @@ no(){ printf '   \033[31m✗\033[0m %s\n' "$*"; FAIL=$((FAIL+1)); }
 hd(){ printf '\n\033[1m── %s ──\033[0m\n' "$*"; }
 
 rp(){   python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$1"; }
-enc(){  python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]).replace("/","-"))' "$1"; }
+enc(){  "$TP" _encode "$1"; }   # use the REAL encode_cwd (anchored by test U below), not a copy of the rule
 
 reset_all(){
   tmux kill-server >/dev/null 2>&1 || true
@@ -81,6 +81,17 @@ transcript_ok(){
 tmux_alive(){ if tmux ls 2>/dev/null | grep -q '^tp-'; then ok "tmux session is live (claude -r …)"; else no "no live tmux session"; fi; }
 
 SID="11111111-1111-1111-1111-111111111111"
+
+# ===========================================================================
+hd "U · encode_cwd matches Claude Code's project-dir rule (NON-circular)"
+# Expected value is HARDCODED — not computed from encode_cwd itself. Anchors the
+# cwd->project-dir rule (every non-alnum char -> "-", runs NOT collapsed) to the
+# real Claude Code behaviour, verified against an actual project dir. If this
+# fails, a teleported session won't be found by `claude -r` on the target — which
+# is exactly the bug the byte-for-byte e2e checks missed (they were circular).
+u_got="$("$TP" _encode '/srv/x/code/.tp/my_repo/2026-06-22-2334')"
+u_exp='-srv-x-code--tp-my-repo-2026-06-22-2334'
+[ "$u_got" = "$u_exp" ] && ok "encode_cwd → $u_got" || no "encode_cwd MISMATCH: got '$u_got' want '$u_exp'"
 
 # ===========================================================================
 hd "A · fresh clone, pushed HEAD → clone into base and work there"
