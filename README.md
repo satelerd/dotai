@@ -144,13 +144,15 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
 
 ## Companion: fainder
 
-dotai moves your *live* session to another machine. Its sibling
-[**fainder**](https://github.com/satelerd/fainder) finds and resumes *any past*
-conversation — across Codex, Claude Code, OpenCode, Hermes, Cursor, and Copilot —
-from one local, read-only CLI.
+dotai moves the conversation you're in to another machine. Its sibling
+[**fainder**](https://github.com/satelerd/fainder) brings back the ones you
+left. Together: never lose a conversation again.
 
-Where dotai teleports the thread you're in, fainder is how you get back the one
-you left. Together: never lose a conversation again.
+fainder is a tiny, local, read-only terminal app that searches and resumes your
+conversations across Codex, Claude Code, OpenCode, Hermes, Cursor, and GitHub
+Copilot. Humans get a TUI to pick a conversation and copy its resume command;
+agents get a CLI (and a bundled skill) to inspect a transcript by turn without
+starting another harness.
 
 ```bash
 brew install satelerd/tap/fainder
@@ -161,7 +163,7 @@ The `fainder` agent skill ships through dotai's skill sync, so once it's in
 `~/.claude/skills` it travels with the rest of your config.
 
 fainder is also vendored here as a git submodule (`fainder/`), pinned to a
-known-good commit. It stays its own repo — build and release happen there. Pull
+known-good commit. It stays its own repo, where build and release happen. Pull
 it with:
 
 ```bash
