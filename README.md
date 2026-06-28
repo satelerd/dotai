@@ -144,9 +144,9 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
 
 ## Companion: fainder
 
-dotai moves the conversation you're in to another machine. Its sibling
-[**fainder**](https://github.com/satelerd/fainder) brings back the ones you
-left. Together: never lose a conversation again.
+dotai moves the configs and conversations to another machine. Its sibling
+[**fainder**](https://github.com/satelerd/fainder) helps you find and resume any
+past conversation. Together: never lose a conversation again.
 
 fainder is a tiny, local, read-only terminal app that searches and resumes your
 conversations across Codex, Claude Code, OpenCode, Hermes, Cursor, and GitHub
@@ -161,16 +161,6 @@ fainder                              # pick a conversation, get its resume comma
 
 The `fainder` agent skill ships through dotai's skill sync, so once it's in
 `~/.claude/skills` it travels with the rest of your config.
-
-fainder is also vendored here as a git submodule (`fainder/`), pinned to a
-known-good commit. It stays its own repo, where build and release happen. Pull
-it with:
-
-```bash
-git submodule update --init fainder   # for an existing dotai clone
-# or clone dotai with everything at once:
-git clone --recurse-submodules https://github.com/YOUR_USERNAME/dotai
-```
 
 ## Setting up on a new machine
 
