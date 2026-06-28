@@ -142,6 +142,24 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
   rm -rf ~/code/.tp/<repo>/<stamp> && git -C ~/code/<repo> worktree prune
   ```
 
+## Companion: fainder
+
+dotai moves your *live* session to another machine. Its sibling
+[**fainder**](https://github.com/satelerd/fainder) finds and resumes *any past*
+conversation — across Codex, Claude Code, OpenCode, Hermes, Cursor, and Copilot —
+from one local, read-only CLI.
+
+Where dotai teleports the thread you're in, fainder is how you get back the one
+you left. Together: never lose a conversation again.
+
+```bash
+brew install satelerd/tap/fainder
+fainder                              # pick a conversation, get its resume command
+```
+
+The `fainder` agent skill ships through dotai's skill sync, so once it's in
+`~/.claude/skills` it travels with the rest of your config.
+
 ## Setting up on a new machine
 
 If you have the `dotai-setup` skill installed, you can ask Claude Code to set up a remote machine over SSH:
