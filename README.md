@@ -160,6 +160,16 @@ fainder                              # pick a conversation, get its resume comma
 The `fainder` agent skill ships through dotai's skill sync, so once it's in
 `~/.claude/skills` it travels with the rest of your config.
 
+fainder is also vendored here as a git submodule (`fainder/`), pinned to a
+known-good commit. It stays its own repo — build and release happen there. Pull
+it with:
+
+```bash
+git submodule update --init fainder   # for an existing dotai clone
+# or clone dotai with everything at once:
+git clone --recurse-submodules https://github.com/YOUR_USERNAME/dotai
+```
+
 ## Setting up on a new machine
 
 If you have the `dotai-setup` skill installed, you can ask Claude Code to set up a remote machine over SSH:
