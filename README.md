@@ -1,10 +1,14 @@
-# dotai
+<img width="2172" alt="dotai" src="assets/banner.png" />
+<br />
+
+### May you and your agents feel at home on any machine.
+<br />
 
 > dotfiles for your AI harness (Claude Code, Codex)
 
 A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
 
-**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there.
+**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there. And after a while, [fainder](https://github.com/satelerd/fainder) lets you search and resume the conversations you've already had.
 
 ## How it works
 
@@ -76,6 +80,16 @@ dotai tp me@mini --tmux          # land it inside tmux for mosh reattach
 
 It prints the `claude -r …` command to continue the same thread on the target (or, with `--tmux`, the `tmux attach` line).
 
+### 5. Find and resume a past conversation
+
+```bash
+brew install satelerd/tap/fainder
+fainder search "auth refactor" --limit 5   # find candidates across all harnesses
+fainder                                     # or open the TUI and pick one
+```
+
+It returns the resume command for the conversation you pick (`claude --resume …`, `codex resume …`, …), so you can jump straight back in.
+
 ## Commands
 
 | Command | What it does |
@@ -141,6 +155,26 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
   ```bash
   rm -rf ~/code/.tp/<repo>/<stamp> && git -C ~/code/<repo> worktree prune
   ```
+
+## Companion: fainder
+
+dotai moves the configs and conversations to another machine. Its sibling
+[**fainder**](https://github.com/satelerd/fainder) helps you find and resume any
+past conversation. Together: never lose a conversation again.
+
+fainder is a tiny, local, read-only terminal app that searches and resumes your
+conversations across Codex, Claude Code, OpenCode, Hermes, Cursor, and GitHub
+Copilot. Humans get a TUI to pick a conversation and copy its resume command;
+agents get a CLI (and a bundled skill) to inspect a transcript by turn without
+starting another harness.
+
+```bash
+brew install satelerd/tap/fainder
+fainder                              # pick a conversation, get its resume command
+```
+
+The `fainder` agent skill ships through dotai's skill sync, so once it's in
+`~/.claude/skills` it travels with the rest of your config.
 
 ## Setting up on a new machine
 

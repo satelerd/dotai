@@ -1,0 +1,4 @@
+[submodule "fainder"]
+	path = fainder
+	url = https://github.com/satelerd/fainder.git
+	branch = main
