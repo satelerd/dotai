@@ -1,4 +1,4 @@
-<img width="2172" alt="dotai" src="assets/banner.png" />
+<img width="2172" alt="dotai" src="https://github.com/user-attachments/assets/1692c8d9-2e74-400e-aa08-b09dda3c27b4" />
 
 ### May you and your agents feel at home on any machine.
 
