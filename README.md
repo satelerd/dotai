@@ -1,10 +1,9 @@
 <img width="2172" alt="dotai" src="assets/banner.png" />
-<br />
 
 ### May you and your agents feel at home on any machine.
-<br />
 
 > dotfiles for your AI harness (Claude Code, Codex)
+<br />
 
 A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
 
