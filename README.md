@@ -4,7 +4,7 @@
 
 A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
 
-**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there.
+**Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there. And after a while, [fainder](https://github.com/satelerd/fainder) lets you search and resume the conversations you've already had.
 
 ## How it works
 
