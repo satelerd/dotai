@@ -1,4 +1,8 @@
-# dotai
+<img width="2172" alt="dotai" src="assets/banner.png" />
+<br />
+
+### May you and your agents feel at home on any machine.
+<br />
 
 > dotfiles for your AI harness (Claude Code, Codex)
 
@@ -75,6 +79,16 @@ dotai tp me@mini --tmux          # land it inside tmux for mosh reattach
 ```
 
 It prints the `claude -r …` command to continue the same thread on the target (or, with `--tmux`, the `tmux attach` line).
+
+### 5. Find and resume a past conversation
+
+```bash
+brew install satelerd/tap/fainder
+fainder search "auth refactor" --limit 5   # find candidates across all harnesses
+fainder                                     # or open the TUI and pick one
+```
+
+It returns the resume command for the conversation you pick (`claude --resume …`, `codex resume …`, …), so you can jump straight back in.
 
 ## Commands
 
