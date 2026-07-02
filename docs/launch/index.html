@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dotai — Cursor Café</title>
+<style>
+  :root {
+    --bg: #0A0B0E;
+    --ink: #E8E4D8;
+    --dim: #6B6F76;
+    --amber: #FFB454;
+    --line: #1E2128;
+    --err: #D96C5F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", "Berkeley Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8vh 10vw;
+    gap: 3.2rem;
+  }
+  .slide.active { display: flex; }
+
+  .eyebrow {
+    color: var(--dim);
+    font-size: clamp(0.8rem, 1.4vw, 1.05rem);
+    letter-spacing: 0.18em;
+  }
+
+  .cmd {
+    font-size: clamp(1.6rem, 4.6vw, 3.6rem);
+    font-weight: 500;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .cmd .prompt { color: var(--amber); }
+  .cmd .typed { color: var(--ink); }
+  .cursor {
+    display: inline-block;
+    width: 0.55em; height: 1.05em;
+    background: var(--amber);
+    vertical-align: text-bottom;
+    margin-left: 0.08em;
+    animation: blink 1.06s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .out {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    font-size: clamp(0.95rem, 1.9vw, 1.35rem);
+    line-height: 1.55;
+    max-width: 62ch;
+  }
+  .out > * {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
+  .slide.done .out > * { opacity: 1; transform: none; }
+  .slide.done .out > *:nth-child(1) { transition-delay: 0.05s; }
+  .slide.done .out > *:nth-child(2) { transition-delay: 0.22s; }
+  .slide.done .out > *:nth-child(3) { transition-delay: 0.39s; }
+  .slide.done .out > *:nth-child(4) { transition-delay: 0.56s; }
+
+  .dim   { color: var(--dim); }
+  .amber { color: var(--amber); }
+  .err   { color: var(--err); }
+  .big   { font-size: clamp(1.15rem, 2.6vw, 1.8rem); color: var(--ink); }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    max-width: none;
+  }
+  .cols .col b {
+    display: block;
+    color: var(--amber);
+    font-weight: 500;
+    font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+    margin-bottom: 0.5rem;
+  }
+  .cols .col span { color: var(--dim); }
+
+  .qr-row { display: flex; align-items: center; gap: 3rem; flex-wrap: wrap; }
+  .qr { width: clamp(120px, 18vw, 200px); height: auto; color: var(--ink); }
+
+  .chrome {
+    position: fixed;
+    bottom: 2.2vh;
+    left: 10vw; right: 10vw;
+    display: flex;
+    justify-content: space-between;
+    color: var(--dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    border-top: 1px solid var(--line);
+    padding-top: 1.1vh;
+    user-select: none;
+  }
+
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 4px; }
+
+  @media (max-width: 640px) {
+    .slide { padding: 6vh 7vw; gap: 2rem; }
+    .cols { grid-template-columns: 1fr; gap: 1.2rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; }
+    .out > * { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<section class="slide" data-cmd="dotai">
+  <p class="eyebrow"># Cursor Café · Santiago · 2026</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p class="big">May you and your agents feel at home<br>on any machine.</p>
+    <p class="dim">dotfiles para tu AI harness — Claude Code · Codex · Cursor</p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="ssh maquina-nueva">
+  <p class="eyebrow"># el problema</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p class="err">~/.claude: no such file or directory</p>
+    <p>tus skills, tus hooks, tus MCP servers: <span class="dim">quedaron en la otra máquina</span></p>
+    <p>y la conversación con tu agente <span class="amber">muere donde nació</span></p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="ls dotai/">
+  <p class="eyebrow"># la idea</p>
+  <h1 class="cmd"></h1>
+  <div class="out cols">
+    <div class="col"><b>sync/</b><span>tu setup viaja</span></div>
+    <div class="col"><b>teleport/</b><span>tu conversación viva viaja</span></div>
+    <div class="col"><b>fainder/</b><span>ninguna conversación se pierde</span></div>
+  </div>
+</section>
+
+<section class="slide" data-cmd="./sync.sh push">
+  <p class="eyebrow"># 1 de 3 — sync</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p><span class="amber">manifest.txt</span> declara exactamente qué viaja: skills, hooks, rules, MCP servers</p>
+    <p class="dim">~/.claude · ~/.codex · ~/.cursor</p>
+    <p>secretos → <span class="amber">__REDACTED__</span> antes de tocar git <span class="dim">· scanner en pre-commit</span></p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="dotai tp me@mini">
+  <p class="eyebrow"># 2 de 3 — teleport</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p>la conversación completa <span class="dim">+</span> el repo <span class="dim">+</span> tus cambios sin commitear</p>
+    <p class="dim">clona o carva un worktree en el destino — nunca pisa lo que había</p>
+    <p>→ <span class="amber">claude -r …</span> y sigues exactamente donde ibas</p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="fainder search &quot;auth refactor&quot;">
+  <p class="eyebrow"># 3 de 3 — fainder</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p>busca en <span class="amber">todas</span> tus conversaciones: Cursor, Claude Code, Codex, Copilot…</p>
+    <p class="dim">local · read-only · Rust · brew install satelerd/tap/fainder</p>
+    <p>te devuelve el comando exacto para <span class="amber">resumir</span> cada una</p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="grep -i cursor manifest.txt">
+  <p class="eyebrow"># cursor</p>
+  <h1 class="cmd"></h1>
+  <div class="out">
+    <p><span class="amber">sync</span> → ~/.cursor/mcp.json viaja <span class="dim">(secretos redactados)</span></p>
+    <p><span class="amber">fainder</span> → indexa y busca tus chats de Cursor</p>
+    <p><span class="amber">teleport</span> → cursor-agent --resume <span class="dim">· en camino</span></p>
+  </div>
+</section>
+
+<section class="slide" data-cmd="git clone github.com/satelerd/dotai">
+  <p class="eyebrow"># fork it</p>
+  <h1 class="cmd"></h1>
+  <div class="out qr-row">
+    <svg class="qr" viewBox="0 0 31 31" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR: github.com/satelerd/dotai"><path d="M1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM13 1h1v1h-1zM14 1h1v1h-1zM15 1h1v1h-1zM17 1h1v1h-1zM19 1h1v1h-1zM23 1h1v1h-1zM24 1h1v1h-1zM25 1h1v1h-1zM26 1h1v1h-1zM27 1h1v1h-1zM28 1h1v1h-1zM29 1h1v1h-1zM1 2h1v1h-1zM7 2h1v1h-1zM12 2h1v1h-1zM14 2h1v1h-1zM15 2h1v1h-1zM16 2h1v1h-1zM20 2h1v1h-1zM21 2h1v1h-1zM23 2h1v1h-1zM29 2h1v1h-1zM1 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM7 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM15 3h1v1h-1zM18 3h1v1h-1zM19 3h1v1h-1zM21 3h1v1h-1zM23 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM27 3h1v1h-1zM29 3h1v1h-1zM1 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM7 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM19 4h1v1h-1zM21 4h1v1h-1zM23 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM27 4h1v1h-1zM29 4h1v1h-1zM1 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM18 5h1v1h-1zM19 5h1v1h-1zM23 5h1v1h-1zM25 5h1v1h-1zM26 5h1v1h-1zM27 5h1v1h-1zM29 5h1v1h-1zM1 6h1v1h-1zM7 6h1v1h-1zM9 6h1v1h-1zM12 6h1v1h-1zM17 6h1v1h-1zM20 6h1v1h-1zM23 6h1v1h-1zM29 6h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM13 7h1v1h-1zM15 7h1v1h-1zM17 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM23 7h1v1h-1zM24 7h1v1h-1zM25 7h1v1h-1zM26 7h1v1h-1zM27 7h1v1h-1zM28 7h1v1h-1zM29 7h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM13 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM18 8h1v1h-1zM1 9h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM18 9h1v1h-1zM20 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM23 9h1v1h-1zM24 9h1v1h-1zM25 9h1v1h-1zM26 9h1v1h-1zM29 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM15 10h1v1h-1zM17 10h1v1h-1zM19 10h1v1h-1zM22 10h1v1h-1zM23 10h1v1h-1zM24 10h1v1h-1zM25 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM28 10h1v1h-1zM29 10h1v1h-1zM1 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM24 11h1v1h-1zM29 11h1v1h-1zM8 12h1v1h-1zM11 12h1v1h-1zM15 12h1v1h-1zM18 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM23 12h1v1h-1zM24 12h1v1h-1zM25 12h1v1h-1zM26 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM11 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM16 13h1v1h-1zM18 13h1v1h-1zM20 13h1v1h-1zM22 13h1v1h-1zM28 13h1v1h-1zM1 14h1v1h-1zM5 14h1v1h-1zM6 14h1v1h-1zM8 14h1v1h-1zM10 14h1v1h-1zM12 14h1v1h-1zM23 14h1v1h-1zM24 14h1v1h-1zM25 14h1v1h-1zM26 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM29 14h1v1h-1zM2 15h1v1h-1zM3 15h1v1h-1zM5 15h1v1h-1zM6 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM12 15h1v1h-1zM14 15h1v1h-1zM15 15h1v1h-1zM16 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM26 15h1v1h-1zM27 15h1v1h-1zM29 15h1v1h-1zM3 16h1v1h-1zM4 16h1v1h-1zM8 16h1v1h-1zM9 16h1v1h-1zM10 16h1v1h-1zM13 16h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1zM17 16h1v1h-1zM18 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM22 16h1v1h-1zM28 16h1v1h-1zM29 16h1v1h-1zM1 17h1v1h-1zM2 17h1v1h-1zM3 17h1v1h-1zM4 17h1v1h-1zM6 17h1v1h-1zM7 17h1v1h-1zM9 17h1v1h-1zM10 17h1v1h-1zM12 17h1v1h-1zM13 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM21 17h1v1h-1zM24 17h1v1h-1zM28 17h1v1h-1zM1 18h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM11 18h1v1h-1zM13 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM17 18h1v1h-1zM19 18h1v1h-1zM21 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM25 18h1v1h-1zM26 18h1v1h-1zM28 18h1v1h-1zM29 18h1v1h-1zM3 19h1v1h-1zM5 19h1v1h-1zM6 19h1v1h-1zM7 19h1v1h-1zM9 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM16 19h1v1h-1zM18 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM27 19h1v1h-1zM29 19h1v1h-1zM10 20h1v1h-1zM11 20h1v1h-1zM12 20h1v1h-1zM15 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM18 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM28 20h1v1h-1zM29 20h1v1h-1zM1 21h1v1h-1zM2 21h1v1h-1zM4 21h1v1h-1zM5 21h1v1h-1zM7 21h1v1h-1zM8 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM13 21h1v1h-1zM14 21h1v1h-1zM15 21h1v1h-1zM18 21h1v1h-1zM19 21h1v1h-1zM21 21h1v1h-1zM22 21h1v1h-1zM23 21h1v1h-1zM24 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM29 21h1v1h-1zM9 22h1v1h-1zM16 22h1v1h-1zM17 22h1v1h-1zM18 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM25 22h1v1h-1zM29 22h1v1h-1zM1 23h1v1h-1zM2 23h1v1h-1zM3 23h1v1h-1zM4 23h1v1h-1zM5 23h1v1h-1zM6 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM10 23h1v1h-1zM11 23h1v1h-1zM12 23h1v1h-1zM14 23h1v1h-1zM15 23h1v1h-1zM16 23h1v1h-1zM17 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM21 23h1v1h-1zM23 23h1v1h-1zM25 23h1v1h-1zM26 23h1v1h-1zM27 23h1v1h-1zM29 23h1v1h-1zM1 24h1v1h-1zM7 24h1v1h-1zM12 24h1v1h-1zM14 24h1v1h-1zM16 24h1v1h-1zM18 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM25 24h1v1h-1zM29 24h1v1h-1zM1 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM5 25h1v1h-1zM7 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM17 25h1v1h-1zM18 25h1v1h-1zM20 25h1v1h-1zM21 25h1v1h-1zM22 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM25 25h1v1h-1zM26 25h1v1h-1zM1 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM7 26h1v1h-1zM10 26h1v1h-1zM11 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM17 26h1v1h-1zM19 26h1v1h-1zM22 26h1v1h-1zM29 26h1v1h-1zM1 27h1v1h-1zM3 27h1v1h-1zM4 27h1v1h-1zM5 27h1v1h-1zM7 27h1v1h-1zM11 27h1v1h-1zM14 27h1v1h-1zM15 27h1v1h-1zM16 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM21 27h1v1h-1zM22 27h1v1h-1zM26 27h1v1h-1zM27 27h1v1h-1zM28 27h1v1h-1zM29 27h1v1h-1zM1 28h1v1h-1zM7 28h1v1h-1zM11 28h1v1h-1zM15 28h1v1h-1zM18 28h1v1h-1zM21 28h1v1h-1zM22 28h1v1h-1zM23 28h1v1h-1zM25 28h1v1h-1zM26 28h1v1h-1zM28 28h1v1h-1zM1 29h1v1h-1zM2 29h1v1h-1zM3 29h1v1h-1zM4 29h1v1h-1zM5 29h1v1h-1zM6 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM13 29h1v1h-1zM14 29h1v1h-1zM15 29h1v1h-1zM16 29h1v1h-1zM18 29h1v1h-1zM21 29h1v1h-1zM22 29h1v1h-1zM23 29h1v1h-1zM24 29h1v1h-1zM25 29h1v1h-1zM26 29h1v1h-1zM28 29h1v1h-1z" fill="currentColor"/></svg>
+    <p class="big">que tú y tus agentes<br>se sientan en casa<br><span class="amber">en cualquier máquina.</span></p>
+  </div>
+</section>
+
+<footer class="chrome">
+  <span>satelerd/dotai</span>
+  <span id="pager">1/8</span>
+</footer>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const pager = document.getElementById('pager');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i = 0, typer = null;
+
+  function show(n) {
+    n = Math.max(0, Math.min(slides.length - 1, n));
+    if (typer) { clearInterval(typer); typer = null; }
+    slides.forEach((s, k) => s.classList.toggle('active', k === n));
+    i = n;
+    pager.textContent = (n + 1) + '/' + slides.length;
+    type(slides[n]);
+  }
+
+  function type(slide) {
+    const el = slide.querySelector('.cmd');
+    const text = slide.dataset.cmd;
+    slide.classList.remove('done');
+    el.innerHTML = '<span class="prompt">$ </span><span class="typed"></span><span class="cursor"></span>';
+    const typed = el.querySelector('.typed');
+    if (reduced) { typed.textContent = text; slide.classList.add('done'); return; }
+    let c = 0;
+    typer = setInterval(() => {
+      typed.textContent = text.slice(0, ++c);
+      if (c >= text.length) { clearInterval(typer); typer = null; slide.classList.add('done'); }
+    }, 32);
+  }
+
+  addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'PageDown', 'j'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp', 'k'].includes(e.key))         { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End')  show(slides.length - 1);
+  });
+  addEventListener('click', e => show(e.clientX > innerWidth / 3 ? i + 1 : i - 1));
+  addEventListener('touchend', e => {
+    const x = e.changedTouches[0].clientX;
+    show(x > innerWidth / 3 ? i + 1 : i - 1);
+  });
+
+  show((parseInt(new URLSearchParams(location.search).get('slide'), 10) || 1) - 1);
+</script>
+</body>
+</html>
