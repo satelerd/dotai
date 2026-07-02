@@ -2,10 +2,10 @@
 
 ### May you and your agents feel at home on any machine.
 
-> dotfiles for your AI harness (Claude Code, Codex)
+> dotfiles for your AI harness (Claude Code, Codex, Cursor)
 <br />
 
-A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
+A lightweight sync system for your **Claude Code** (`~/.claude`), **Codex** (`~/.codex`), and **Cursor** (`~/.cursor`) configs: skills, prompts, hooks, statusline, rules, keybindings, MCP servers, and plugin manifests.
 
 **Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there. And after a while, [fainder](https://github.com/satelerd/fainder) lets you search and resume the conversations you've already had.
 
@@ -114,6 +114,7 @@ Defined in `manifest.txt`. Add or remove entries to match your setup.
 |---|---|---|
 | Claude Code | `CLAUDE.md`, `skills/`, `claude-hooks/`, `statusline*.sh`, `settings.*.json` (redacted), plugin manifests, `settings.local.json` | history, sessions, projects, todos, caches, `auth.json`, `settings.json` (raw) |
 | Codex | `AGENTS.md`, `codex-skills/`, `codex-hooks/`, `codex-rules/`, `codex-keybindings.json`, `config.toml` (redacted) | memories (they have their own git), history |
+| Cursor | `~/.cursor/mcp.json` (global MCP servers, secrets in `env`/`headers` redacted) | project `.cursor/` config, editor settings/keybindings (they live under a spaced path), app chat state (SQLite), extensions |
 
 Plugin **content** is not vendored; it lives in its marketplace repo with `autoUpdate`. Only the manifest that reinstalls them is synced.
 

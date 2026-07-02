@@ -43,6 +43,29 @@ sanitize_file() {
         else . end
       ' "$src" > "$dst"
       ;;
+    mcp.json)
+      # Cursor's global MCP config (~/.cursor/mcp.json). Redact secrets carried in
+      # each server's env/headers, plus any secret-looking field on the server itself.
+      jq '
+        if has("mcpServers") then
+          .mcpServers |= with_entries(
+            .value |= (
+              with_entries(
+                if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   and (.value | type == "string")
+                then .value = "__REDACTED__" else . end
+              )
+              | (if has("env") then .env |= with_entries(
+                   if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   then .value = "__REDACTED__" else . end) else . end)
+              | (if has("headers") then .headers |= with_entries(
+                   if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   then .value = "__REDACTED__" else . end) else . end)
+            )
+          )
+        else . end
+      ' "$src" > "$dst"
+      ;;
     config.toml)
       # Redact API keys embedded in MCP server headers and X-API-Key values.
       perl -pe '

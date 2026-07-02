@@ -36,3 +36,9 @@ sync      .codex/hooks                                 codex-hooks
 sync      .codex/hooks.json                            codex-hooks.json
 sync      .codex/rules                                 codex-rules
 sync      .codex/keybindings.json                      codex-keybindings.json
+
+# ---------------- Cursor (~/.cursor) ----------------
+# Global MCP servers. Values in env/headers (API keys, tokens) are redacted on
+# push and land as mcp.json.from-sync on pull. Project-level config (.cursor/ in
+# each repo) and the app's SQLite chat state are intentionally NOT synced.
+sanitize  .cursor/mcp.json                             cursor/mcp.json
