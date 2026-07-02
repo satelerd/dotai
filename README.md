@@ -2,10 +2,10 @@
 
 ### May you and your agents feel at home on any machine.
 
-> dotfiles for your AI harness (Claude Code, Codex)
+> dotfiles for your AI harness (Claude Code, Codex, Cursor)
 <br />
 
-A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (`~/.codex`) configs: skills, prompts, hooks, statusline, rules, keybindings, and plugin manifests.
+A lightweight sync system for your **Claude Code** (`~/.claude`), **Codex** (`~/.codex`), and **Cursor** (`~/.cursor`) configs: skills, prompts, hooks, statusline, rules, keybindings, MCP servers, and plugin manifests.
 
 **Goal:** fork this repo, run one command to back up your setup, and restore everything on a new machine in minutes. Then you can teleport a *live* conversation between your machines and pick it up there. And after a while, [fainder](https://github.com/satelerd/fainder) lets you search and resume the conversations you've already had.
 
@@ -15,6 +15,7 @@ A lightweight sync system for your **Claude Code** (`~/.claude`) and **Codex** (
  Machine A                  GitHub                      Machine B
  ~/.claude  ──── push ────▶ dotai repo ──── pull ────▶  ~/.claude
  ~/.codex                                               ~/.codex
+ ~/.cursor                                              ~/.cursor
 ```
 
 `manifest.txt` declares exactly what moves. API keys are redacted on push and arrive as `*.from-sync` on pull, so your live files are never overwritten.
@@ -97,13 +98,13 @@ It returns the resume command for the conversation you pick (`claude --resume �
 | `./sync.sh pull` | `repo → HOME`. Additive, never deletes your local files. |
 | `./sync.sh status` | Shows what differs between HOME and the repo. No writes. |
 | `./sync.sh scan` | Scans the repo tree for secrets. Exits non-zero if found. |
-| `dotai tp [HOST]` | Teleport the current Claude Code conversation to HOST. |
+| `dotai tp [HOST]` | Teleport the current conversation to HOST (`--harness cursor\|codex` for the others). |
 
 ## Security model
 
-- `settings.json` and `config.toml` are **never stored with real values**. On `push`, secret-looking env values are replaced with `__REDACTED__`.
+- `settings.json`, `config.toml`, and `mcp.json` are **never stored with real values**. On `push`, secret-looking env values are replaced with `__REDACTED__`.
 - A secret scanner runs as a `pre-commit` hook and as the last step of every `push`. It aborts if it finds a pattern matching known secret formats.
-- `.gitignore` blocks the raw config files (`settings.json`, `config.toml`) so an accidental `git add -A` can't leak them.
+- `.gitignore` blocks the raw config files (`settings.json`, `config.toml`, `mcp.json`) so an accidental `git add -A` can't leak them.
 - Real secrets live in your secrets store (1Password, a private repo, etc.) and are never touched by dotai.
 
 ## What gets synced
@@ -114,6 +115,7 @@ Defined in `manifest.txt`. Add or remove entries to match your setup.
 |---|---|---|
 | Claude Code | `CLAUDE.md`, `skills/`, `claude-hooks/`, `statusline*.sh`, `settings.*.json` (redacted), plugin manifests, `settings.local.json` | history, sessions, projects, todos, caches, `auth.json`, `settings.json` (raw) |
 | Codex | `AGENTS.md`, `codex-skills/`, `codex-hooks/`, `codex-rules/`, `codex-keybindings.json`, `config.toml` (redacted) | memories (they have their own git), history |
+| Cursor | `~/.cursor/mcp.json` (global MCP servers, secrets in `env`/`headers` redacted) | project `.cursor/` config, editor settings/keybindings (they live under a spaced path), app chat state (SQLite), extensions |
 
 Plugin **content** is not vendored; it lives in its marketplace repo with `autoUpdate`. Only the manifest that reinstalls them is synced.
 
@@ -139,13 +141,15 @@ How the repo lands on the target:
 | Repo not cloned yet | Clones into `$DOTAI_TP_BASE/<repo>` and works there. |
 | Repo already cloned | Carves a dedicated **git worktree** on a fresh `tp/<stamp>` branch under `$DOTAI_TP_BASE/.tp/<repo>/`. The existing checkout is **never touched**, so work in progress isn't obstructed. |
 
-Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`). v1 is Claude Code only.
+Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`).
+
+**Harnesses:** Claude Code is the original path. `--harness cursor` moves a **cursor-agent CLI** session and `--harness codex` moves a **Codex** rollout — both validated with a real round-trip that resumed with conversation memory intact (the target needs that harness installed and logged in; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md` and `docs/teleport-codex.md`).
 
 **tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 
 **Let an agent teleport itself.** The `teleport` skill lets Claude move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` and runs the send for you.
 
-**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, and the no-clobber guard.
+**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, the no-clobber guard, and the cursor-agent packaging/placement path.
 
 **Known limits**
 
@@ -154,6 +158,19 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
   ```bash
   rm -rf ~/code/.tp/<repo>/<stamp> && git -C ~/code/<repo> worktree prune
   ```
+
+## Install the skills as a plugin
+
+dotai is also a Claude Code **marketplace**, so you can install its skills
+(`teleport`, `dotai-setup`) without copying files or symlinking:
+
+```bash
+claude plugin marketplace add satelerd/dotai     # or YOUR_USERNAME/dotai for a fork
+claude plugin install dotai@dotai
+```
+
+Updates come with `claude plugin marketplace update dotai`. The skills stay in
+`skills/`; this just makes them installable through the marketplace too.
 
 ## Companion: fainder
 

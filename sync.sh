@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# sync.sh — sync your Claude Code and Codex configs with this repo.
+# sync.sh — sync your Claude Code, Codex, and Cursor configs with this repo.
 #
 # Usage:
 #   ./sync.sh push     Copy HOME -> repo (sanitizes secrets). Then scans.
@@ -8,7 +8,7 @@
 #   ./sync.sh status   Show diff between HOME and repo (no writes).
 #   ./sync.sh scan     Scan the repo tree for secrets. Exits non-zero if found.
 #
-# Secrets never go into the repo: settings.json / config.toml are redacted on push.
+# Secrets never go into the repo: settings.json / config.toml / mcp.json are redacted on push.
 # Re-inject real values from your secrets store after pull.
 
 set -euo pipefail
@@ -39,6 +39,29 @@ sanitize_file() {
           .env |= with_entries(
             if (.key | ascii_downcase | test("key|token|secret|password"))
             then .value = "__REDACTED__" else . end
+          )
+        else . end
+      ' "$src" > "$dst"
+      ;;
+    mcp.json)
+      # Cursor's global MCP config (~/.cursor/mcp.json). Redact secrets carried in
+      # each server's env/headers, plus any secret-looking field on the server itself.
+      jq '
+        if has("mcpServers") then
+          .mcpServers |= with_entries(
+            .value |= (
+              with_entries(
+                if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   and (.value | type == "string")
+                then .value = "__REDACTED__" else . end
+              )
+              | (if has("env") then .env |= with_entries(
+                   if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   then .value = "__REDACTED__" else . end) else . end)
+              | (if has("headers") then .headers |= with_entries(
+                   if (.key | ascii_downcase | test("key|token|secret|password|auth"))
+                   then .value = "__REDACTED__" else . end) else . end)
+            )
           )
         else . end
       ' "$src" > "$dst"
@@ -168,7 +191,7 @@ pull() {
   info "pull: repo -> HOME (additive; secret files go to *.from-sync)"
   for_each_entry _pull_entry
   echo
-  warn "Remember to re-inject secrets into settings.json / config.toml from your secrets store."
+  warn "Remember to re-inject secrets into settings.json / config.toml / mcp.json from your secrets store."
 }
 
 # ---------------------------------------------------------------------------
@@ -176,6 +199,7 @@ pull() {
 # ---------------------------------------------------------------------------
 _status_entry() {
   local mode="$1" home_abs="$2" repo_abs="$3" home_rel="$4"
+  [[ ! -e "$home_abs" && ! -e "$repo_abs" ]] && { warn "  · absent:     $home_rel (neither HOME nor repo)"; return 0; }
   [[ ! -e "$home_abs" ]] && { warn "  · repo only:  $home_rel"; return 0; }
   [[ ! -e "$repo_abs" ]] && { warn "  · HOME only:  $home_rel (not yet pushed)"; return 0; }
   local tmp=""
@@ -211,7 +235,7 @@ main() {
     status) status ;;
     scan)   scan ;;
     *) cat <<EOF
-sync.sh — sync Claude Code and Codex configs with this repo.
+sync.sh — sync Claude Code, Codex, and Cursor configs with this repo.
 
   ./sync.sh push     HOME -> repo (sanitizes secrets, then scans)
   ./sync.sh pull     repo -> HOME (additive; secrets -> *.from-sync)

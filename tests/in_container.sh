@@ -229,5 +229,97 @@ else ok "2nd placement refused (no-clobber)"; fi
 [[ "$(md5sum "$DST" 2>/dev/null | cut -d' ' -f1)" == "$SUM_BEFORE" ]] && ok "existing transcript left intact" || no "existing transcript was modified"
 
 # ===========================================================================
+hd "K · cursor harness → session dir travels, lands under the new cwd hash"
+# Plumbing test: packaging, transfer, placement, no-clobber. The chats-bucket
+# hash itself is exercised through the REAL cursor_hash_cwd on both sides, so
+# this is circular on the hash rule — grounding that rule against a real
+# cursor-agent session is a separate, on-machine check (same story as test U).
+reset_all; init_origin kilo
+rm -rf "$HOME/.cursor"
+chash(){ "$TP" _cursor_hash "$1"; }
+CSID="22222222-2222-2222-2222-222222222222"
+git clone -q "$ORIGIN_URL" "$HOME/work/kilo"
+( cd "$HOME/work/kilo"; echo "edit-k" >> README.md )
+SRC_CD="$HOME/.cursor/chats/$(chash "$HOME/work/kilo")/$CSID"
+mkdir -p "$SRC_CD"
+head -c 4096 /dev/urandom > "$SRC_CD/store.db"    # opaque payload: must travel byte-identical
+( cd "$HOME/work/kilo" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1 || no "K send failed"
+WD="$HOME/code/kilo"
+[[ -d "$WD/.git" ]] && ok "repo cloned at $WD" || no "no clone at $WD"
+bytematch "$HOME/work/kilo" "$WD" "K"
+DSTD="$HOME/.cursor/chats/$(chash "$WD")/$CSID"
+[[ -f "$DSTD/store.db" ]] && ok "cursor session placed under the new cwd's bucket" || no "session dir missing: $DSTD"
+cmp -s "$SRC_CD/store.db" "$DSTD/store.db" && ok "store.db byte-identical" || no "store.db differs after transfer"
+# no-clobber (mirrors E): outside git the workdir is deterministic, so the same
+# session sent twice lands on the SAME bucket — the second must be refused.
+mkdir -p "$HOME/work/kilo2"; echo "note" > "$HOME/work/kilo2/note.txt"
+SRC2="$HOME/.cursor/chats/$(chash "$HOME/work/kilo2")/$CSID"
+mkdir -p "$SRC2"; head -c 512 /dev/urandom > "$SRC2/store.db"
+( cd "$HOME/work/kilo2" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1 \
+  && ok "1st placement (no-URL) ok" || no "1st cursor placement failed"
+DST2="$HOME/.cursor/chats/$(chash "$HOME/code/kilo2")/$CSID/store.db"
+SUM2="$(md5sum "$DST2" 2>/dev/null | cut -d' ' -f1)"
+if ( cd "$HOME/work/kilo2" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1; then
+  no "2nd cursor placement should have been refused"
+else ok "2nd placement refused (cursor no-clobber)"; fi
+[[ "$(md5sum "$DST2" 2>/dev/null | cut -d' ' -f1)" == "$SUM2" ]] && ok "existing store.db left intact" || no "existing store.db was modified"
+
+# ===========================================================================
+hd "L · codex harness → rollout travels, session_meta cwd rewritten, no-clobber"
+# In the sandbox source and target share \$HOME, and a codex rollout lands at
+# the SAME path it came from (sessions/YYYY/MM/DD/<basename>) — so a full send
+# to self MUST be refused by the no-clobber guard (that's assertion 1, and it
+# exercises the whole ssh path). Placement + rewrite are then asserted by
+# running receive against a payload directly, exactly what runs on a real
+# target (validated for real on the mini, 2026-07-01: resumed with memory).
+reset_all; init_origin lima
+rm -rf "$HOME/.codex"
+CXSID="33333333-3333-3333-3333-333333333333"
+CXBASE="rollout-2026-07-01T12-00-00-$CXSID.jsonl"
+git clone -q "$ORIGIN_URL" "$HOME/work/lima"
+make_codex_session(){   # <dir> — fake rollout anchored at dir's realpath
+  local rpdir; rpdir="$(rp "$1")"
+  mkdir -p "$HOME/.codex/sessions/2026/07/01"
+  python3 - "$HOME/.codex/sessions/2026/07/01/$CXBASE" "$rpdir" "$CXSID" <<'PY'
+import json, sys
+f, cwd, sid = sys.argv[1:4]
+with open(f, "w") as o:
+    o.write(json.dumps({"timestamp": "t0", "type": "session_meta",
+                        "payload": {"id": sid, "cwd": cwd, "cli_version": "test"}}) + "\n")
+    o.write(json.dumps({"timestamp": "t1", "type": "event_msg",
+                        "payload": {"content": f"I am working in {cwd}"}}) + "\n")
+PY
+}
+make_codex_session "$HOME/work/lima"
+CXSRC="$HOME/.codex/sessions/2026/07/01/$CXBASE"
+CXSUM="$(md5sum "$CXSRC" | cut -d' ' -f1)"
+if ( cd "$HOME/work/lima" && "$TP" send "$HOST" --session "$CXSID" --harness codex ) >/dev/null 2>&1; then
+  no "send-to-self should have been refused (same rollout path)"
+else ok "send-to-self refused (codex no-clobber over the full ssh path)"; fi
+[[ "$(md5sum "$CXSRC" | cut -d' ' -f1)" == "$CXSUM" ]] && ok "original rollout left intact" || no "original rollout was modified"
+# Now the real-target shape: payload in hand, original gone, receive places it.
+PAY="$(mktemp -d)"
+mv "$CXSRC" "$PAY/$CXBASE"
+cp "$TP" "$PAY/teleport.sh"
+python3 - "$PAY/tp.json" "$(rp "$HOME/work/lima")" "$CXSID" <<'PY'
+import json, sys
+out, src_cwd, sid = sys.argv[1:4]
+json.dump({"version": 1, "harness": "codex", "session_id": sid, "source_cwd": src_cwd,
+           "repo": {"url": "", "branch": "", "head": "", "has_patch": False,
+                    "has_untracked": False, "has_bundle": False},
+           "repo_name": "lima"}, open(out, "w"))
+PY
+bash "$PAY/teleport.sh" receive "$PAY" >/dev/null 2>&1 || no "L receive failed"
+CXDST="$HOME/.codex/sessions/2026/07/01/$CXBASE"
+[[ -f "$CXDST" ]] && ok "rollout placed under sessions/YYYY/MM/DD" || no "rollout not placed at $CXDST"
+if python3 -c 'import json,sys;d=json.loads(open(sys.argv[1]).readline());sys.exit(0 if d["payload"]["cwd"]==sys.argv[2] else 1)' "$CXDST" "$(rp "$HOME/code/lima")"; then
+  ok "session_meta cwd rewritten → $(rp "$HOME/code/lima")"
+else no "session_meta cwd not rewritten"; fi
+grep -q "I am working in $(rp "$HOME/work/lima")" "$CXDST" && ok "prose untouched (no blanket path replace)" || no "prose was mangled"
+if bash "$PAY/teleport.sh" receive "$PAY" >/dev/null 2>&1; then no "2nd receive should have been refused"
+else ok "2nd receive refused (codex no-clobber)"; fi
+rm -rf "$PAY"
+
+# ===========================================================================
 printf '\n\033[1m═══ %d passed · %d failed ═══\033[0m\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
