@@ -67,9 +67,11 @@ realpath_p() { python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' 
 encode_cwd() { printf '%s' "$(realpath_p "$1")" | sed 's/[^a-zA-Z0-9]/-/g'; }
 
 # cursor-agent buckets its CLI chats by a hash of the workspace cwd:
-#   ~/.cursor/chats/<hash(resolved cwd)>/<chatId>/store.db
-# TODO(ground): hash assumed md5-hex of the resolved cwd — verify against a real
-# session before trusting a round-trip (same non-circular bar as encode_cwd).
+#   ~/.cursor/chats/<md5(resolved cwd)>/<chatId>/{store.db,meta.json}
+# Verified against a real session (cursor-agent 2026.07.01): the bucket dir is
+# exactly md5-hex of the resolved cwd, store.db carries NO cwd (so placement is
+# all that's needed), and a real round-trip resumed with memory intact. If a
+# Cursor version changes this, update here (see docs/teleport-cursor.md).
 cursor_hash_cwd() {
   local p; p="$(realpath_p "$1")"
   if command -v md5 >/dev/null 2>&1; then printf '%s' "$p" | md5 -q

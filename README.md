@@ -143,7 +143,7 @@ How the repo lands on the target:
 
 Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`).
 
-**Harnesses:** Claude Code is the fully-grounded path. `--harness cursor` moves a **cursor-agent CLI** session (experimental — the pipeline is e2e-tested, the resume-on-target step still needs real-world grounding; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md`). Codex is grounded but not implemented yet (`docs/teleport-codex.md`).
+**Harnesses:** Claude Code is the original path. `--harness cursor` moves a **cursor-agent CLI** session — validated with a real round-trip that resumed with memory intact (the target needs cursor-agent installed and logged in; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md`). Codex is grounded but not implemented yet (`docs/teleport-codex.md`).
 
 **tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 

@@ -1,14 +1,18 @@
 # Teleport for Cursor — design note
 
-> **Status: implemented for `cursor-agent` CLI sessions, EXPERIMENTAL
+> **Status: implemented and VALIDATED for `cursor-agent` CLI sessions
 > (2026-07-01).** `dotai tp --harness cursor` moves the newest cursor-agent
-> chat for the current cwd. The full pipeline (package → transfer → placement →
-> no-clobber) is covered by the e2e suite (scenario K, Docker sandbox). What is
-> NOT yet grounded against a real logged-in cursor-agent: (a) that the chats
-> bucket is exactly md5(cwd) — isolated in `cursor_hash_cwd()`, marked
-> TODO(ground); (b) that `cursor-agent --resume <chatId>` finds a chat placed
-> under a different bucket than where it was born. The GUI app chat remains
-> out of scope (no resume entrypoint — see below).
+> chat for the current cwd. Grounded against a real logged-in cursor-agent
+> (2026.07.01) on the mini: (a) the chats bucket is exactly **md5-hex of the
+> resolved cwd** (`~/.cursor/chats/<md5(cwd)>/<chatId>/{store.db,meta.json}`);
+> (b) `store.db` carries **no cwd** (meta = agentId, latestRootBlobId, name,
+> mode), so placing the dir under the new bucket is all that's needed; (c) a
+> **real round-trip over ssh** resumed the teleported chat with conversation
+> memory intact (`agent --resume <id>` answered a marker from a pre-teleport
+> turn without re-reading files). The pipeline is also covered by e2e scenario
+> K in the Docker sandbox. Requirement: the target machine needs cursor-agent
+> installed and logged in. The GUI app chat remains out of scope (no resume
+> entrypoint — see below).
 
 ## What "teleport" needs
 
