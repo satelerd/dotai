@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# sync.sh — sync your Claude Code and Codex configs with this repo.
+# sync.sh — sync your Claude Code, Codex, and Cursor configs with this repo.
 #
 # Usage:
 #   ./sync.sh push     Copy HOME -> repo (sanitizes secrets). Then scans.
@@ -8,7 +8,7 @@
 #   ./sync.sh status   Show diff between HOME and repo (no writes).
 #   ./sync.sh scan     Scan the repo tree for secrets. Exits non-zero if found.
 #
-# Secrets never go into the repo: settings.json / config.toml are redacted on push.
+# Secrets never go into the repo: settings.json / config.toml / mcp.json are redacted on push.
 # Re-inject real values from your secrets store after pull.
 
 set -euo pipefail
@@ -191,7 +191,7 @@ pull() {
   info "pull: repo -> HOME (additive; secret files go to *.from-sync)"
   for_each_entry _pull_entry
   echo
-  warn "Remember to re-inject secrets into settings.json / config.toml from your secrets store."
+  warn "Remember to re-inject secrets into settings.json / config.toml / mcp.json from your secrets store."
 }
 
 # ---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ main() {
     status) status ;;
     scan)   scan ;;
     *) cat <<EOF
-sync.sh — sync Claude Code and Codex configs with this repo.
+sync.sh — sync Claude Code, Codex, and Cursor configs with this repo.
 
   ./sync.sh push     HOME -> repo (sanitizes secrets, then scans)
   ./sync.sh pull     repo -> HOME (additive; secrets -> *.from-sync)

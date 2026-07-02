@@ -15,6 +15,7 @@ A lightweight sync system for your **Claude Code** (`~/.claude`), **Codex** (`~/
  Machine A                  GitHub                      Machine B
  ~/.claude  ──── push ────▶ dotai repo ──── pull ────▶  ~/.claude
  ~/.codex                                               ~/.codex
+ ~/.cursor                                              ~/.cursor
 ```
 
 `manifest.txt` declares exactly what moves. API keys are redacted on push and arrive as `*.from-sync` on pull, so your live files are never overwritten.
@@ -101,9 +102,9 @@ It returns the resume command for the conversation you pick (`claude --resume �
 
 ## Security model
 
-- `settings.json` and `config.toml` are **never stored with real values**. On `push`, secret-looking env values are replaced with `__REDACTED__`.
+- `settings.json`, `config.toml`, and `mcp.json` are **never stored with real values**. On `push`, secret-looking env values are replaced with `__REDACTED__`.
 - A secret scanner runs as a `pre-commit` hook and as the last step of every `push`. It aborts if it finds a pattern matching known secret formats.
-- `.gitignore` blocks the raw config files (`settings.json`, `config.toml`) so an accidental `git add -A` can't leak them.
+- `.gitignore` blocks the raw config files (`settings.json`, `config.toml`, `mcp.json`) so an accidental `git add -A` can't leak them.
 - Real secrets live in your secrets store (1Password, a private repo, etc.) and are never touched by dotai.
 
 ## What gets synced

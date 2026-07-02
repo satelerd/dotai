@@ -12,6 +12,7 @@ claude/settings.json
 claude/settings.pro.json
 claude/settings.bedrock.json
 codex/config.toml
+cursor/mcp.json
 **/config.toml.bak-*
 **/*.from-sync
 
