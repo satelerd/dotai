@@ -1,9 +1,15 @@
 # Teleport for Codex — design note
 
-> **Status: GROUNDED, ready to implement (2026-06-23).** The session format was
-> confirmed against real Codex sessions on the MacBook. Implementation + a real
-> end-to-end test are the next-session task. The bar is the same Claude teleport
-> met: a real laptop→mini run that actually resumes.
+> **Status: implemented and VALIDATED (2026-07-01).** `dotai tp --harness codex`
+> moves the newest Codex rollout for the current cwd. Grounded against
+> codex-cli 0.142.5 (bundled in Codex.app) on the mini: the format below held,
+> and the open question is answered — **resume is global by UUID** (a session
+> absent from `session_index.jsonl` still resumes from any cwd; the index only
+> tracks named threads). A **real round-trip** placed a rollout with its
+> `session_meta` cwd rewritten and `codex exec resume <uuid>` recalled a
+> pre-teleport marker from conversation memory. e2e scenario L covers the
+> pipeline in the Docker sandbox. Requirement: the target needs codex
+> installed and logged in.
 
 ## Goal
 
@@ -23,13 +29,14 @@ only finding / packaging / placing / resuming the session is Codex-specific.
   **UUID in the filename**, not by an encoded-cwd project dir. So there's no
   path-encoding trap like the one that bit Claude — likely simpler.
 
-## The one open question (confirm FIRST when implementing)
+## The one open question — ANSWERED (2026-07-01)
 
-How does `codex resume` locate a session — by UUID globally (scans
-`~/.codex/sessions/`) or tied to the cwd? This decides whether dropping the rollout
-file in place is enough, or whether an index/registry must be touched. Confirm with
-`codex resume --help` (needs `node` on PATH — the bun shim failed over headless SSH;
-run it in a login shell or via `/opt/homebrew/bin/codex`).
+`codex resume` locates a session **by UUID globally**: a rollout dropped under
+`~/.codex/sessions/YYYY/MM/DD/` resumes from any cwd, without touching
+`session_index.jsonl` (that index only tracks named threads from the desktop
+app). Verified empirically on codex-cli 0.142.5: created a session via
+`codex exec`, confirmed its uuid was absent from the index, resumed it from a
+different directory, and it recalled the conversation.
 
 ## Implementation sketch
 

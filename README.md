@@ -98,7 +98,7 @@ It returns the resume command for the conversation you pick (`claude --resume �
 | `./sync.sh pull` | `repo → HOME`. Additive, never deletes your local files. |
 | `./sync.sh status` | Shows what differs between HOME and the repo. No writes. |
 | `./sync.sh scan` | Scans the repo tree for secrets. Exits non-zero if found. |
-| `dotai tp [HOST]` | Teleport the current conversation to HOST (`--harness cursor` for cursor-agent). |
+| `dotai tp [HOST]` | Teleport the current conversation to HOST (`--harness cursor\|codex` for the others). |
 
 ## Security model
 
@@ -143,7 +143,7 @@ How the repo lands on the target:
 
 Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`).
 
-**Harnesses:** Claude Code is the original path. `--harness cursor` moves a **cursor-agent CLI** session — validated with a real round-trip that resumed with memory intact (the target needs cursor-agent installed and logged in; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md`). Codex is grounded but not implemented yet (`docs/teleport-codex.md`).
+**Harnesses:** Claude Code is the original path. `--harness cursor` moves a **cursor-agent CLI** session and `--harness codex` moves a **Codex** rollout — both validated with a real round-trip that resumed with conversation memory intact (the target needs that harness installed and logged in; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md` and `docs/teleport-codex.md`).
 
 **tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 

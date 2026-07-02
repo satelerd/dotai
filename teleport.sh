@@ -9,16 +9,16 @@
 # from your phone over mosh.
 #
 # Usage:
-#   teleport.sh send    [HOST] [--session ID] [--into DIR] [--harness claude|cursor] [--tmux]
+#   teleport.sh send    [HOST] [--session ID] [--into DIR] [--harness claude|cursor|codex] [--tmux]
 #   teleport.sh receive <payload-dir>            # internal: runs on the target
 #
 #   --into DIR   land the repo under DIR on the target (default: DOTAI_TP_BASE,
 #                i.e. ~/code). A bare name is relative to the target's $HOME, so
 #                `--into work` lands it in ~/work there (absolute paths too).
 #
-# Harnesses: claude (Claude Code, the original) and cursor (cursor-agent CLI
-# sessions — the terminal agent, not the GUI app chat; see docs/teleport-cursor.md).
-# Codex is grounded but not implemented yet (docs/teleport-codex.md).
+# Harnesses: claude (Claude Code, the original), cursor (cursor-agent CLI
+# sessions — the terminal agent, not the GUI app chat; docs/teleport-cursor.md),
+# and codex (rollout files, resume is global by uuid; docs/teleport-codex.md).
 #
 # Repo landing on the target (matched by remote URL, not folder name):
 #   · not cloned there  -> clone into $DOTAI_TP_BASE/<repo> and work there
@@ -153,9 +153,8 @@ cmd_send() {
   [[ -z "$host" ]] && die "No target host. Pass one (dotai tp send user@host) or set DOTAI_TP_HOST in .dotai.conf"
 
   case "$harness" in
-    claude|cursor) ;;
-    codex) die "Codex teleport isn't implemented yet (grounded — see docs/teleport-codex.md)." ;;
-    *) die "Unknown harness: $harness (claude | cursor)" ;;
+    claude|cursor|codex) ;;
+    *) die "Unknown harness: $harness (claude | cursor | codex)" ;;
   esac
 
   local cwd; cwd="$(realpath_p "$PWD")"
@@ -171,7 +170,7 @@ cmd_send() {
     fi
     sfile="$proj_dir/$session.jsonl"
     [[ -f "$sfile" ]] || die "Session not found: $sfile"
-  else
+  elif [[ "$harness" == "cursor" ]]; then
     local chats_dir="$HOME/.cursor/chats/$(cursor_hash_cwd "$cwd")"
     [[ -d "$chats_dir" ]] || die "No cursor-agent sessions for this directory ($cwd).\n  Start one with: cursor-agent"
 
@@ -182,6 +181,43 @@ cmd_send() {
     fi
     sdir="$chats_dir/$session"
     [[ -d "$sdir" ]] || die "Session not found: $sdir"
+  else
+    # codex: rollouts live under ~/.codex/sessions/YYYY/MM/DD/rollout-<ts>-<uuid>.jsonl
+    # and the ONLY cwd is on the first line (session_meta payload.cwd). Resume is
+    # global by UUID (verified against codex-cli 0.142.5, 2026-07-01) — no index
+    # entry needed (session_index.jsonl only tracks named threads).
+    local sess_root="$HOME/.codex/sessions"
+    [[ -d "$sess_root" ]] || die "No Codex sessions dir ($sess_root). Has codex run here?"
+    if [[ -n "$session" ]]; then
+      sfile="$(find "$sess_root" -name "rollout-*${session}.jsonl" -type f 2>/dev/null | head -1)"
+      [[ -n "$sfile" ]] || die "Session not found: $session"
+    else
+      # Newest rollout whose session_meta cwd == this cwd.
+      sfile="$(python3 - "$sess_root" "$cwd" <<'PY'
+import json, os, sys
+root, cwd = sys.argv[1], sys.argv[2]
+best = None
+for dirp, _, files in os.walk(root):
+    for f in files:
+        if not (f.startswith("rollout-") and f.endswith(".jsonl")):
+            continue
+        p = os.path.join(dirp, f)
+        try:
+            with open(p) as fh:
+                d = json.loads(fh.readline())
+            if d.get("payload", {}).get("cwd") != cwd:
+                continue
+        except Exception:
+            continue
+        m = os.path.getmtime(p)
+        if best is None or m > best[0]:
+            best = (m, p)
+print(best[1] if best else "")
+PY
+)"
+      [[ -n "$sfile" ]] || die "No Codex sessions for this directory ($cwd).\n  Start one with: codex"
+      session="$(basename "$sfile" .jsonl)"; session="${session: -36}"   # uuid = last 36 chars
+    fi
   fi
 
   info "▶ Teleporting $harness session ${session:0:8}… from $cwd"
@@ -207,9 +243,13 @@ cmd_send() {
   trap 'rm -rf "${stage:-}"' EXIT
   if [[ "$harness" == "claude" ]]; then
     cp "$sfile" "$stage/session.jsonl"
-  else
+  elif [[ "$harness" == "cursor" ]]; then
     # cursor-agent sessions are a directory (store.db + friends): carry it whole.
     tar -czf "$stage/cursor-session.tar.gz" -C "$(dirname "$sdir")" "$(basename "$sdir")"
+  else
+    # codex: keep the original basename — the target derives sessions/YYYY/MM/DD
+    # from it and `codex resume` matches the embedded uuid.
+    cp "$sfile" "$stage/$(basename "$sfile")"
   fi
   cp "$REPO_ROOT/teleport.sh" "$stage/teleport.sh"   # self-contained receiver
 
@@ -299,7 +339,7 @@ out("HAS_BUNDLE", "1" if r.get("has_bundle") else "")
 PY
 )"
 
-  case "$HARNESS" in claude|cursor) ;; *) die "receive: unsupported harness '$HARNESS'" ;; esac
+  case "$HARNESS" in claude|cursor|codex) ;; *) die "receive: unsupported harness '$HARNESS'" ;; esac
 
   # Resolve the base where the repo lands on THIS (target) machine.
   # --into <dir> (carried as DOTAI_TP_DEST) overrides the configured DOTAI_TP_BASE.
@@ -406,7 +446,7 @@ if not entry.get("hasTrustDialogAccepted"):
 PY
   resume_cmd="claude -r $SID"
 
-  else
+  elif [[ "$HARNESS" == "cursor" ]]; then
     # cursor-agent: the session dir lands under the chats bucket for the NEW cwd.
     local chats="$HOME/.cursor/chats/$(cursor_hash_cwd "$tcwd")"
     local dstdir="$chats/$SID"
@@ -417,6 +457,41 @@ PY
     tar -xzf "$payload/cursor-session.tar.gz" -C "$chats" || die "failed to unpack cursor session"
     ok "  · cursor-agent session placed at $dstdir"
     resume_cmd="cursor-agent --resume $SID"
+
+  else
+    # codex: place the rollout under sessions/YYYY/MM/DD (derived from its own
+    # filename) and rewrite ONLY the session_meta cwd — resume is global by uuid.
+    local rsrc; rsrc="$(ls "$payload"/rollout-*.jsonl 2>/dev/null | head -1)"
+    [[ -n "$rsrc" ]] || die "receive: codex rollout missing from payload"
+    local rbase ymd ddir dst
+    rbase="$(basename "$rsrc")"
+    ymd="${rbase#rollout-}"; ymd="${ymd:0:10}"                       # YYYY-MM-DD
+    ddir="$HOME/.codex/sessions/${ymd:0:4}/${ymd:5:2}/${ymd:8:2}"
+    dst="$ddir/$rbase"
+    if [[ -e "$dst" ]]; then
+      die "A Codex session with id $SID already exists on the target:\n  $dst\n  Refusing to overwrite (no clobber). Delete it first if you really want to replace it."
+    fi
+    mkdir -p "$ddir"
+    python3 - "$rsrc" "$dst" "$SRC_CWD" "$tcwd" <<'PY'
+import json, sys
+src, dst, old, new = sys.argv[1:5]
+n = 0
+with open(src) as f, open(dst, "w") as o:
+    for line in f:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        try:
+            d = json.loads(line)
+        except Exception:
+            o.write(line + "\n"); continue
+        # Rewrite ONLY the structured session_meta cwd — never blanket-replace prose.
+        if d.get("type") == "session_meta" and d.get("payload", {}).get("cwd") == old:
+            d["payload"]["cwd"] = new; n += 1
+        o.write(json.dumps(d) + "\n")
+print(f"  · rollout placed ({n} cwd refs rewritten)")
+PY
+    resume_cmd="codex resume $SID"
   fi
 
   # ---- Optionally land it in tmux for mosh reattach --------------------
@@ -446,10 +521,11 @@ main() {
     *) cat <<EOF
 teleport.sh — move a live AI conversation to another machine.
 
-  teleport.sh send [HOST] [--session ID] [--into DIR] [--harness claude|cursor] [--tmux]
+  teleport.sh send [HOST] [--session ID] [--into DIR] [--harness claude|cursor|codex] [--tmux]
       Package the current session + repo state and send it.
       --harness cursor moves the newest cursor-agent CLI chat for this cwd
       (the terminal agent — the GUI app chat can't be teleported; see docs/).
+      --harness codex moves the newest Codex rollout for this cwd.
       HOST defaults to DOTAI_TP_HOST from .dotai.conf.
       --into DIR lands the repo under DIR (default ~/code). A bare name is
       relative to the target's home: --into work → ~/work on the target.

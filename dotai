@@ -29,7 +29,7 @@ dotai — dotfiles + teleport for your AI harness.
   dotai tp [HOST]      teleport the current conversation to HOST
                        (HOST defaults to DOTAI_TP_HOST in .dotai.conf)
        --session ID    pick a specific session instead of the latest
-       --harness H     claude (default) or cursor (cursor-agent CLI, experimental)
+       --harness H     claude (default), cursor (cursor-agent CLI) or codex
        --into DIR      land the repo under DIR on the target (default ~/code;
                        a bare name like "work" is relative to the target home)
        --tmux          land the session inside tmux on the target (default: off)
