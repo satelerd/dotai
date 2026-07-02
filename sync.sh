@@ -199,6 +199,7 @@ pull() {
 # ---------------------------------------------------------------------------
 _status_entry() {
   local mode="$1" home_abs="$2" repo_abs="$3" home_rel="$4"
+  [[ ! -e "$home_abs" && ! -e "$repo_abs" ]] && { warn "  · absent:     $home_rel (neither HOME nor repo)"; return 0; }
   [[ ! -e "$home_abs" ]] && { warn "  · repo only:  $home_rel"; return 0; }
   [[ ! -e "$repo_abs" ]] && { warn "  · HOME only:  $home_rel (not yet pushed)"; return 0; }
   local tmp=""
