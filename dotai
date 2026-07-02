@@ -21,14 +21,15 @@ case "$sub" in
   *) cat <<EOF
 dotai — dotfiles + teleport for your AI harness.
 
-  dotai sync push      back up ~/.claude and ~/.codex configs to the repo
+  dotai sync push      back up ~/.claude, ~/.codex and ~/.cursor configs to the repo
   dotai sync pull      restore configs on a new machine
   dotai sync status    diff HOME vs repo
   dotai sync scan      scan repo for secrets
 
-  dotai tp [HOST]      teleport the current Claude Code conversation to HOST
+  dotai tp [HOST]      teleport the current conversation to HOST
                        (HOST defaults to DOTAI_TP_HOST in .dotai.conf)
        --session ID    pick a specific session instead of the latest
+       --harness H     claude (default) or cursor (cursor-agent CLI, experimental)
        --into DIR      land the repo under DIR on the target (default ~/code;
                        a bare name like "work" is relative to the target home)
        --tmux          land the session inside tmux on the target (default: off)

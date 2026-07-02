@@ -1,11 +1,14 @@
 # Teleport for Cursor — design note
 
-> **Status: NOT implemented, deferred (2026-07-01).** Config sync for Cursor
-> (`~/.cursor/mcp.json`) and fainder search over Cursor both ship today. Teleport
-> is out of scope for now because Cursor has no clean "resume this exact
-> conversation" entrypoint for the surface people actually use (the GUI chat).
-> This note records the grounding so a future session can pick it up without
-> re-discovering the walls.
+> **Status: implemented for `cursor-agent` CLI sessions, EXPERIMENTAL
+> (2026-07-01).** `dotai tp --harness cursor` moves the newest cursor-agent
+> chat for the current cwd. The full pipeline (package → transfer → placement →
+> no-clobber) is covered by the e2e suite (scenario K, Docker sandbox). What is
+> NOT yet grounded against a real logged-in cursor-agent: (a) that the chats
+> bucket is exactly md5(cwd) — isolated in `cursor_hash_cwd()`, marked
+> TODO(ground); (b) that `cursor-agent --resume <chatId>` finds a chat placed
+> under a different bucket than where it was born. The GUI app chat remains
+> out of scope (no resume entrypoint — see below).
 
 ## What "teleport" needs
 
@@ -70,10 +73,16 @@ Ground on a machine that has Cursor (the MacBook Pro), the same bar Codex met:
 5. **Two-machine reality.** A round-trip demo needs `cursor-agent` installed on
    *both* machines. The Mac mini has no Cursor today.
 
-## What ships now instead
+## What ships now
 
 - **Config sync:** `~/.cursor/mcp.json` (global MCP servers), secrets in
   `env`/`headers` redacted on push, `mcp.json.from-sync` on pull. See `manifest.txt`.
 - **Search & reopen:** fainder finds any Cursor conversation and gives you the
   command to open its workspace. That covers "find the thread again" — just not a
   live cross-machine hand-off of the GUI chat.
+- **Teleport (experimental):** `dotai tp <host> --harness cursor` for
+  `cursor-agent` CLI sessions. Storage grounded so far:
+  `~/.cursor/chats/<hash(cwd)>/<chatId>/store.db` (SQLite: `meta` with a UUID
+  `agentId`, `blobs` with the turns; confirmed by community deep-dives, cursor
+  v2026.07). The pipeline is e2e-tested in the sandbox; the two remaining
+  real-machine checks are listed at the top of this note.

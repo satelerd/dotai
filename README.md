@@ -98,7 +98,7 @@ It returns the resume command for the conversation you pick (`claude --resume �
 | `./sync.sh pull` | `repo → HOME`. Additive, never deletes your local files. |
 | `./sync.sh status` | Shows what differs between HOME and the repo. No writes. |
 | `./sync.sh scan` | Scans the repo tree for secrets. Exits non-zero if found. |
-| `dotai tp [HOST]` | Teleport the current Claude Code conversation to HOST. |
+| `dotai tp [HOST]` | Teleport the current conversation to HOST (`--harness cursor` for cursor-agent). |
 
 ## Security model
 
@@ -141,13 +141,15 @@ How the repo lands on the target:
 | Repo not cloned yet | Clones into `$DOTAI_TP_BASE/<repo>` and works there. |
 | Repo already cloned | Carves a dedicated **git worktree** on a fresh `tp/<stamp>` branch under `$DOTAI_TP_BASE/.tp/<repo>/`. The existing checkout is **never touched**, so work in progress isn't obstructed. |
 
-Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`). v1 is Claude Code only.
+Everything is additive: it refuses to overwrite an existing session (no-clobber) and never modifies the target's working checkout. Config lives in `.dotai.conf` (`DOTAI_TP_HOST`, `DOTAI_TP_BASE`, `DOTAI_TP_TMUX`).
+
+**Harnesses:** Claude Code is the fully-grounded path. `--harness cursor` moves a **cursor-agent CLI** session (experimental — the pipeline is e2e-tested, the resume-on-target step still needs real-world grounding; the Cursor *GUI* chat can't be teleported because it has no resume entrypoint, see `docs/teleport-cursor.md`). Codex is grounded but not implemented yet (`docs/teleport-codex.md`).
 
 **tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 
 **Let an agent teleport itself.** The `teleport` skill lets Claude move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` and runs the send for you.
 
-**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, and the no-clobber guard.
+**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, the no-clobber guard, and the cursor-agent packaging/placement path.
 
 **Known limits**
 

@@ -229,5 +229,41 @@ else ok "2nd placement refused (no-clobber)"; fi
 [[ "$(md5sum "$DST" 2>/dev/null | cut -d' ' -f1)" == "$SUM_BEFORE" ]] && ok "existing transcript left intact" || no "existing transcript was modified"
 
 # ===========================================================================
+hd "K · cursor harness → session dir travels, lands under the new cwd hash"
+# Plumbing test: packaging, transfer, placement, no-clobber. The chats-bucket
+# hash itself is exercised through the REAL cursor_hash_cwd on both sides, so
+# this is circular on the hash rule — grounding that rule against a real
+# cursor-agent session is a separate, on-machine check (same story as test U).
+reset_all; init_origin kilo
+rm -rf "$HOME/.cursor"
+chash(){ "$TP" _cursor_hash "$1"; }
+CSID="22222222-2222-2222-2222-222222222222"
+git clone -q "$ORIGIN_URL" "$HOME/work/kilo"
+( cd "$HOME/work/kilo"; echo "edit-k" >> README.md )
+SRC_CD="$HOME/.cursor/chats/$(chash "$HOME/work/kilo")/$CSID"
+mkdir -p "$SRC_CD"
+head -c 4096 /dev/urandom > "$SRC_CD/store.db"    # opaque payload: must travel byte-identical
+( cd "$HOME/work/kilo" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1 || no "K send failed"
+WD="$HOME/code/kilo"
+[[ -d "$WD/.git" ]] && ok "repo cloned at $WD" || no "no clone at $WD"
+bytematch "$HOME/work/kilo" "$WD" "K"
+DSTD="$HOME/.cursor/chats/$(chash "$WD")/$CSID"
+[[ -f "$DSTD/store.db" ]] && ok "cursor session placed under the new cwd's bucket" || no "session dir missing: $DSTD"
+cmp -s "$SRC_CD/store.db" "$DSTD/store.db" && ok "store.db byte-identical" || no "store.db differs after transfer"
+# no-clobber (mirrors E): outside git the workdir is deterministic, so the same
+# session sent twice lands on the SAME bucket — the second must be refused.
+mkdir -p "$HOME/work/kilo2"; echo "note" > "$HOME/work/kilo2/note.txt"
+SRC2="$HOME/.cursor/chats/$(chash "$HOME/work/kilo2")/$CSID"
+mkdir -p "$SRC2"; head -c 512 /dev/urandom > "$SRC2/store.db"
+( cd "$HOME/work/kilo2" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1 \
+  && ok "1st placement (no-URL) ok" || no "1st cursor placement failed"
+DST2="$HOME/.cursor/chats/$(chash "$HOME/code/kilo2")/$CSID/store.db"
+SUM2="$(md5sum "$DST2" 2>/dev/null | cut -d' ' -f1)"
+if ( cd "$HOME/work/kilo2" && "$TP" send "$HOST" --session "$CSID" --harness cursor ) >/dev/null 2>&1; then
+  no "2nd cursor placement should have been refused"
+else ok "2nd placement refused (cursor no-clobber)"; fi
+[[ "$(md5sum "$DST2" 2>/dev/null | cut -d' ' -f1)" == "$SUM2" ]] && ok "existing store.db left intact" || no "existing store.db was modified"
+
+# ===========================================================================
 printf '\n\033[1m═══ %d passed · %d failed ═══\033[0m\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
