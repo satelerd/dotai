@@ -33,7 +33,7 @@ NO delegar: decisiones de arquitectura, trabajo user-facing donde el taste impor
 
 | modelo | perfil | usar para |
 |---|---|---|
-| `gpt-5.6-terra` | workhorse diario (~$2.50/$15 por 1M) | default para todo lo delegado |
+| `gpt-5.6-terra` | workhorse diario (~2.50/15 USD por 1M tokens) | default para todo lo delegado |
 | `gpt-5.6-sol` | detalle y pulido | cuando el output delegado es user-facing |
 | `gpt-5.6-luna` | barato, repetible | bulk trivial masivo (renombres, formateo) |
 
