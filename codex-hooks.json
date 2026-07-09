@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.codex/hooks/whook-permission.sh",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}

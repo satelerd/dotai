@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Design"
+  short_description: "Rules for starting strong frontend design work"
+  default_prompt: "Use $frontend-design to create the first design pass for a new frontend surface."

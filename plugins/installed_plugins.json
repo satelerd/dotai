@@ -1,0 +1,164 @@
+{
+  "version": 2,
+  "plugins": {
+    "rust-analyzer-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/claude-plugins-official/rust-analyzer-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-29T17:15:20.654Z",
+        "lastUpdated": "2026-01-29T17:15:20.654Z",
+        "gitCommitSha": "e30768372b4150ca1bc0839d93283e8edc30d60d"
+      }
+    ],
+    "codex@openai-codex": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/openai-codex/codex/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-03-31T15:39:33.891Z",
+        "lastUpdated": "2026-03-31T15:39:33.891Z",
+        "gitCommitSha": "9cb4fe4099195b2587c402117a3efce6ab5aac78"
+      }
+    ],
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
+        "version": "unknown",
+        "installedAt": "2026-04-08T04:37:23.061Z",
+        "lastUpdated": "2026-07-09T22:31:28.493Z"
+      }
+    ],
+    "warp@claude-code-warp": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/claude-code-warp/warp/2.0.0",
+        "version": "2.0.0",
+        "installedAt": "2026-04-17T16:34:59.515Z",
+        "lastUpdated": "2026-04-17T16:34:59.515Z",
+        "gitCommitSha": "0175f1fccf3e5063a349ab139bf897154ad0dbc6"
+      }
+    ],
+    "overcast@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/overcast/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-04-28T14:04:05.429Z",
+        "lastUpdated": "2026-07-03T21:06:03.809Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "whook@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/whook/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-05-03T20:53:32.890Z",
+        "lastUpdated": "2026-07-03T21:06:03.809Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "remote-desktop@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/remote-desktop/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-05-09T02:24:47.819Z",
+        "lastUpdated": "2026-07-03T21:06:03.810Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "fainder@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/fainder/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-05-13T17:11:48.771Z",
+        "lastUpdated": "2026-07-03T21:06:03.808Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "protocols@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/protocols/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-06-01T17:54:10.668Z",
+        "lastUpdated": "2026-07-03T21:06:03.809Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "infisical@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/infisical/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-06-09T17:19:56.877Z",
+        "lastUpdated": "2026-07-03T21:06:03.807Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "autosolve-pipelines@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/autosolve-pipelines/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-06-11T17:15:35.622Z",
+        "lastUpdated": "2026-07-03T21:06:03.808Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "smartvoc@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/smartvoc/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-06-16T22:09:05.950Z",
+        "lastUpdated": "2026-07-03T21:06:03.810Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ],
+    "devices@dotai-private": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/dotai-private/devices/a102dce16cc1",
+        "version": "a102dce16cc1",
+        "installedAt": "2026-07-04T23:00:17.772Z",
+        "lastUpdated": "2026-07-04T23:00:17.772Z",
+        "gitCommitSha": "a102dce16cc10fefd6953f6a1916eba21d6dad8e"
+      }
+    ],
+    "oye@dotai-private": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/dotai-private/oye/a102dce16cc1",
+        "version": "a102dce16cc1",
+        "installedAt": "2026-07-04T23:00:18.883Z",
+        "lastUpdated": "2026-07-04T23:00:18.883Z",
+        "gitCommitSha": "a102dce16cc10fefd6953f6a1916eba21d6dad8e"
+      }
+    ],
+    "whatsapp@dotai-private": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/dotai-private/whatsapp/a102dce16cc1",
+        "version": "a102dce16cc1",
+        "installedAt": "2026-07-04T23:00:20.011Z",
+        "lastUpdated": "2026-07-04T23:00:20.011Z",
+        "gitCommitSha": "a102dce16cc10fefd6953f6a1916eba21d6dad8e"
+      }
+    ],
+    "shapeup@smartup-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/Users/sat/.claude/plugins/cache/smartup-plugins/shapeup/77413d370a58",
+        "version": "77413d370a58",
+        "installedAt": "2026-07-09T16:33:25.816Z",
+        "lastUpdated": "2026-07-09T16:33:25.816Z",
+        "gitCommitSha": "77413d370a581dd1efde98bbd735d7760d75e1c3"
+      }
+    ]
+  }
+}

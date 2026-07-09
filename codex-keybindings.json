@@ -1,0 +1,10 @@
+[
+  {
+    "command": "globalDictationToggle",
+    "key": "Alt+Space"
+  },
+  {
+    "command": "hotkeyWindow",
+    "key": "Command+N"
+  }
+]

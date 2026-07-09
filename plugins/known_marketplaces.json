@@ -1,0 +1,43 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/sat/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-07-09T22:31:28.388Z"
+  },
+  "openai-codex": {
+    "source": {
+      "source": "github",
+      "repo": "openai/codex-plugin-cc"
+    },
+    "installLocation": "/Users/sat/.claude/plugins/marketplaces/openai-codex",
+    "lastUpdated": "2026-03-31T15:36:28.596Z"
+  },
+  "claude-code-warp": {
+    "source": {
+      "source": "github",
+      "repo": "warpdotdev/claude-code-warp"
+    },
+    "installLocation": "/Users/sat/.claude/plugins/marketplaces/claude-code-warp",
+    "lastUpdated": "2026-04-17T16:34:59.034Z"
+  },
+  "smartup-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "SmartUp-Chile/plugins"
+    },
+    "installLocation": "/Users/sat/.claude/plugins/marketplaces/smartup-plugins",
+    "lastUpdated": "2026-07-09T22:31:28.216Z",
+    "autoUpdate": true
+  },
+  "dotai-private": {
+    "source": {
+      "source": "directory",
+      "path": "/Users/sat/code/dotai-private"
+    },
+    "installLocation": "/Users/sat/code/dotai-private",
+    "lastUpdated": "2026-07-04T22:49:11.000Z"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "cleanupPeriodDays": 36500,
+  "env": {
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "AWS_REGION": "us-east-1",
+    "ANTHROPIC_BEDROCK_BASE_URL": "https://bedrock-runtime.us-east-1.amazonaws.com",
+    "AWS_BEDROCK_API_KEY": "__REDACTED__",
+    "SMARTVOC_API_KEY": "__REDACTED__",
+    "SMARTVOC_API_URL": "https://backend.dev.smartvoc.ai"
+  },
+  "model": "us.anthropic.claude-opus-4-7",
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/whook-permission.sh",
+            "timeout": 3900
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/whook-stop.sh",
+            "timeout": 3900
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "codex@openai-codex": true,
+    "frontend-design@claude-plugins-official": true,
+    "warp@claude-code-warp": true,
+    "overcast@smartup-plugins": true,
+    "whook@smartup-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "claude-code-warp": {
+      "source": {
+        "source": "github",
+        "repo": "warpdotdev/claude-code-warp"
+      }
+    },
+    "smartup-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "SmartUp-Chile/plugins"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "skipDangerousModePermissionPrompt": true
+}

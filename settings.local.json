@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/sat/.claude/projects -name *.jsonl -o -name *.json)",
+      "Bash(find /Users/sat -maxdepth 4 -path */codex* -type d)",
+      "Bash(grep -l -i \"mail\\\\|correo\\\\|email\" /Users/sat/.claude/projects/*//*.jsonl)",
+      "Bash(python3:*)"
+    ]
+  }
+}

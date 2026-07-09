@@ -1,0 +1,470 @@
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+personality = "pragmatic"
+web_search = "live"
+
+
+
+
+
+notify = ["/Users/sat/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+approval_policy = "on-request"
+approvals_reviewer = "guardian_subagent"
+sandbox_mode = "workspace-write"
+service_tier = "default"
+
+[projects."/Users/sat/code/tests"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/office-visuals"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/hatzalah"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/shouldideploy"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack/agente-0001"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/mac-use"]
+trust_level = "trusted"
+
+[projects."/Users/sat"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/test/azure-cost-intelligence"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/sora"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/multi-channel"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack/agente-001"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/commits"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/commits/git-sat"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/version-control"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack/smartup-web-app"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/wtspp"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/platanus-hack-2/platanus-hack-25-arcade"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack/admin"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/smartup-web-app"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/office-visuals"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/SmartUp-3-Rebirth"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/ax"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/fullstack/tools"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/cchc-hackathon/back"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/multi-channel"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core"]
+trust_level = "trusted"
+
+[projects."/"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/SmartUp-3-Rebirth"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/whook"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-04-22-necesito-que-revises-aws-iam-y"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/smartorders/williams"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/ops-smartup/shape-up"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/nok"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-04-23/revisa-el-mcp-de-shapeuep"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/baileys-hub"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-04-23/https-shapeup-smartup-lat-v2-tasks"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/admin"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/smartvoc"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/smartup-secrets"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-04-24/bueno-necesito-que-me-ayudes-a"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-04-30/hola-necesito-que-uses-mi-computador"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-02/hola"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-02/hola-2"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-02/hoal"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-02/skill-installer-hatch-pet"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/agente-0001"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-05/tengo-un-problema-muy-grave-me"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/nexus-portfolio"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/fainder"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/utils/aws-management"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-14/hola-hoy-hice-mi-computador-y-2"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-14/hpl-a"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-15/quiero-hacer-una-demo-que-se"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-16/cacha-ese-es-el-algoritmo-de"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-18/bueno-rev-sate-qu-estoy-haciendo"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-18/reviste-hatzalah-cl-onda-que-dns"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/Pump Up"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/smartberg"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/core/flujo-protocolos"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/LiquidGlassExploration"]
+trust_level = "trusted"
+
+[projects."/Users/sat/code/LiquidGlassExploration/liquid-dom-testing"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-05-21/buenas-podr-ais-sacar-un-screenshot"]
+trust_level = "trusted"
+
+[projects."/Users/sat/SmartUp/smartorders"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-06-28/okay-i-am-here-with-caleb"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-07-06/https-www-hellyhansenchile-cl-ski-descuentos"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-07-09/you-are-an-expert-travel-data"]
+trust_level = "trusted"
+
+[projects."/Users/sat/Documents/Codex/2026-07-09/hazme-un-buen-gr-fico-que"]
+trust_level = "trusted"
+
+[notice]
+hide_gpt5_1_migration_prompt = true
+"hide_gpt-5.1-codex-max_migration_prompt" = true
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
+
+[mcp_servers.shapeup]
+command = "npx"
+args = ["-y", "mcp-remote@0.1.38", "https://shapeup.smartup.lat/api/mcp-v2", "--transport", "http-only", "--header", "X-ShapeUp-API-Key: sk_shapeup___REDACTED__"]
+
+[mcp_servers.shapeup.tools.shapeup_list_tasks]
+approval_mode = "approve"
+
+[mcp_servers.shapeup.tools.shapeup_list_pipelines]
+approval_mode = "approve"
+
+[mcp_servers.shapeup.tools.shapeup_context]
+approval_mode = "approve"
+
+[mcp_servers.shapeup.tools.shapeup_create_task]
+approval_mode = "approve"
+
+[mcp_servers.shapeup.tools.shapeup_update_task]
+approval_mode = "approve"
+
+[mcp_servers.shapeup.tools.shapeup_list_projects]
+approval_mode = "approve"
+
+[mcp_servers.admin-manage]
+url = "https://admin.smartup.lat/api/mcp"
+
+[mcp_servers.admin-manage.http_headers]
+X-API-Key = "__REDACTED__"
+
+[mcp_servers.admin-manage-pro]
+url = "https://admin.smartup.lat/api/mcp-pro"
+enabled = true
+
+[mcp_servers.admin-manage-pro.http_headers]
+X-API-Key = "__REDACTED__"
+
+[mcp_servers.admin-manage-onboard-legal]
+url = "https://admin.smartup.lat/api/mcp"
+enabled = false
+
+[mcp_servers.admin-manage-onboard-legal.http_headers]
+X-API-Key = "__REDACTED__"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.admin-manage-remote]
+command = "npx"
+args = ["-y", "mcp-remote@0.1.38", "https://admin.smartup.lat/api/mcp", "--transport", "http-only", "--header", "X-API-Key: __REDACTED__"]
+enabled = false
+
+[mcp_servers.admin-manage-remote.tools.admin_view_agent]
+approval_mode = "approve"
+
+[mcp_servers.admin-manage-remote.tools.admin_list_functions]
+approval_mode = "approve"
+
+[mcp_servers.admin-manage-remote.tools.admin_list_agent_functions]
+approval_mode = "approve"
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/sat/.codex"
+CODEX_HOME = "/Users/sat/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,9f3594de71104f9f06015712cef546902a47ab57709ebf93db6e6081d8e92364"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.707.31123"
+SKY_CUA_SERVICE_PATH = "/Users/sat/.codex/plugins/cache/openai-bundled/computer-use/1.0.1000366/Codex Computer Use.app"
+CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[features]
+multi_agent = true
+codex_hooks = true
+memories = true
+js_repl = false
+
+[plugins."gmail@openai-curated"]
+enabled = true
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."google-calendar@openai-curated"]
+enabled = true
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."3d-node-canvas@smartup-plugins"]
+enabled = true
+
+[plugins."admin-manage@smartup-plugins"]
+enabled = true
+
+[plugins."dev-insights@smartup-plugins"]
+enabled = true
+
+[plugins."overcast@smartup-plugins"]
+enabled = true
+
+[plugins."shapeup@smartup-plugins"]
+enabled = true
+
+[plugins."smartvoc@smartup-plugins"]
+enabled = true
+
+[plugins."whook@smartup-plugins"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[marketplaces.openai-bundled]
+last_updated = "2026-07-09T22:32:40Z"
+source_type = "local"
+source = "/Users/sat/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.smartup-plugins]
+last_updated = "2026-04-21T18:45:00Z"
+source_type = "local"
+source = "/Users/sat/.codex/local-marketplaces/smartup"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-07-06T20:37:18Z"
+source_type = "local"
+source = "/Users/sat/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[tui]
+session_picker_view = "comfortable"
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-remaining", "five-hour-limit", "used-tokens"]
+status_line_use_colors = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[hooks.state]
+
+[hooks.state."/Users/sat/.codex/hooks.json:pre_tool_use:0:0"]
+enabled = false
+trusted_hash = "sha256:109ef1f52299a68feb98c8fa03ca23fba324ee7de9722436efb78b522bd59cb2"
+
+[memories]
+generate_memories = true
+use_memories = true
+
+[desktop]
+appearanceTheme = "dark"
+appearanceLightCodeThemeId = "codex"
+appearanceDarkCodeThemeId = "tokyo-night"
+sansFontSize = 15
+codeFontSize = 14
+usePointerCursors = false
+dictationDictionary = ["SmartUp", "ShapeUp", "SmartVOC", "NOK", "agente", "Daniel Sateler", "cachai", "weon", "wea", "fainder"]
+followUpQueueMode = "queue"
+composerEnterBehavior = "cmdIfMultiline"
+preventSleepWhileRunning = true
+keepRemoteControlAwakeWhilePluggedIn = true
+notifications-turn-mode = "always"
+selected-avatar-id = "custom:singularity"
+conversationDetailMode = "STEPS_COMMANDS"
+dock-icon-preference = "app-default"
+
+[desktop.appearanceLightChromeTheme]
+accent = "#0169cc"
+contrast = 45
+ink = "#0d0d0d"
+opaqueWindows = false
+surface = "#ffffff"
+
+[desktop.appearanceLightChromeTheme.fonts]
+
+[desktop.appearanceLightChromeTheme.semanticColors]
+diffAdded = "#00a240"
+diffRemoved = "#e02e2a"
+skill = "#751ed9"
+
+[desktop.appearanceDarkChromeTheme]
+accent = "#3d59a1"
+contrast = 50
+ink = "#a9b1d6"
+opaqueWindows = false
+surface = "#1a1b26"
+
+[desktop.appearanceDarkChromeTheme.fonts]
+
+[desktop.appearanceDarkChromeTheme.semanticColors]
+diffAdded = "#449dab"
+diffRemoved = "#914c54"
+skill = "#9d7cd8"
+
+[desktop.open-in-target-preferences]
+global = "fileManager"
+
+[desktop.open-in-target-preferences.perPath]
+"/Users/sat/SmartUp" = "cursor"
+"/Users/sat/code" = "fileManager"
