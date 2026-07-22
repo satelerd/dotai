@@ -142,6 +142,19 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
   rm -rf ~/code/.tp/<repo>/<stamp> && git -C ~/code/<repo> worktree prune
   ```
 
+## Install the skills as a plugin
+
+dotai is also a Claude Code **marketplace**, so you can install its skills
+(`teleport`, `dotai-setup`) without copying files or symlinking:
+
+```bash
+claude plugin marketplace add satelerd/dotai     # or YOUR_USERNAME/dotai for a fork
+claude plugin install dotai@dotai
+```
+
+Updates come with `claude plugin marketplace update dotai`. The skills stay in
+`skills/`; this just makes them installable through the marketplace too.
+
 ## Setting up on a new machine
 
 If you have the `dotai-setup` skill installed, you can ask Claude Code to set up a remote machine over SSH:
