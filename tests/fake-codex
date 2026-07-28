@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ "${1:-}" = "resume" ] && [ "${2:-}" = "--help" ]; then
+  echo "Resume a previous interactive session"
+  exit 0
+fi
+
+if [ "${1:-}" = "resume" ] && [ -n "${2:-}" ]; then
+  printf '%s\n' "$*" >> /tmp/fake-codex-invocations
+  exec sleep 3600
+fi
+
+echo "unsupported fake codex invocation: $*" >&2
+exit 1

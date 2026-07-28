@@ -21,7 +21,8 @@ enc(){  "$TP" _encode "$1"; }   # use the REAL encode_cwd (anchored by test U be
 
 reset_all(){
   tmux kill-server >/dev/null 2>&1 || true
-  rm -rf "$HOME/code" "$HOME/work" "$HOME/origins" "$HOME/.claude/projects" "$HOME/.cache/dotai-tp"
+  rm -rf "$HOME/code" "$HOME/work" "$HOME/origins" "$HOME/.claude/projects" "$HOME/.codex" "$HOME/.cache/dotai-tp"
+  rm -f /tmp/fake-codex-invocations
   mkdir -p "$HOME/code" "$HOME/work"
 }
 
@@ -78,7 +79,7 @@ transcript_ok(){
   else no "prose was mangled (blanket replace)"; fi
 }
 
-tmux_alive(){ if tmux ls 2>/dev/null | grep -q '^tp-'; then ok "tmux session is live (claude -r …)"; else no "no live tmux session"; fi; }
+tmux_alive(){ if tmux ls 2>/dev/null | grep -q '^tp-'; then ok "tmux session is live"; else no "no live tmux session"; fi; }
 
 SID="11111111-1111-1111-1111-111111111111"
 
@@ -268,12 +269,11 @@ else ok "2nd placement refused (cursor no-clobber)"; fi
 hd "L · codex harness → rollout travels, session_meta cwd rewritten, no-clobber"
 # In the sandbox source and target share \$HOME, and a codex rollout lands at
 # the SAME path it came from (sessions/YYYY/MM/DD/<basename>) — so a full send
-# to self MUST be refused by the no-clobber guard (that's assertion 1, and it
-# exercises the whole ssh path). Placement + rewrite are then asserted by
-# running receive against a payload directly, exactly what runs on a real
-# target (validated for real on the mini, 2026-07-01: resumed with memory).
+# to self MUST be refused by the no-clobber guard. The source command runs from
+# a DIFFERENT cwd to prove an explicit UUID uses session_meta.cwd as truth.
+# Placement + rewrite are then asserted by running receive against a payload,
+# including the app-bundled Codex fallback and actual tmux resume invocation.
 reset_all; init_origin lima
-rm -rf "$HOME/.codex"
 CXSID="33333333-3333-3333-3333-333333333333"
 CXBASE="rollout-2026-07-01T12-00-00-$CXSID.jsonl"
 git clone -q "$ORIGIN_URL" "$HOME/work/lima"
@@ -293,10 +293,17 @@ PY
 make_codex_session "$HOME/work/lima"
 CXSRC="$HOME/.codex/sessions/2026/07/01/$CXBASE"
 CXSUM="$(md5sum "$CXSRC" | cut -d' ' -f1)"
-if ( cd "$HOME/work/lima" && "$TP" send "$HOST" --session "$CXSID" --harness codex ) >/dev/null 2>&1; then
+if ( cd "$HOME/work" && "$TP" send "$HOST" --session "$CXSID" --harness codex ) >/dev/null 2>&1; then
   no "send-to-self should have been refused (same rollout path)"
 else ok "send-to-self refused (codex no-clobber over the full ssh path)"; fi
 [[ "$(md5sum "$CXSRC" | cut -d' ' -f1)" == "$CXSUM" ]] && ok "original rollout left intact" || no "original rollout was modified"
+CXMAN="$(ls -t "$HOME"/.cache/dotai-tp/*/tp.json 2>/dev/null | head -1)"
+if python3 -c 'import json,os,sys;d=json.load(open(sys.argv[1]));sys.exit(0 if d["session_id"]==sys.argv[2] and d["source_cwd"]==os.path.realpath(sys.argv[3]) else 1)' "$CXMAN" "$CXSID" "$HOME/work/lima"; then
+  ok "explicit UUID canonicalized and session_meta cwd used as source truth"
+else no "explicit UUID used the invoking shell cwd or wrong session id"; fi
+if ( cd "$HOME/work" && "$TP" send "$HOST" --session "${CXSID:0:8}" --harness codex ) >/dev/null 2>&1; then
+  no "partial Codex UUID should have been rejected"
+else ok "partial Codex UUID rejected"; fi
 # Now the real-target shape: payload in hand, original gone, receive places it.
 PAY="$(mktemp -d)"
 mv "$CXSRC" "$PAY/$CXBASE"
@@ -316,8 +323,41 @@ if python3 -c 'import json,sys;d=json.loads(open(sys.argv[1]).readline());sys.ex
   ok "session_meta cwd rewritten → $(rp "$HOME/code/lima")"
 else no "session_meta cwd not rewritten"; fi
 grep -q "I am working in $(rp "$HOME/work/lima")" "$CXDST" && ok "prose untouched (no blanket path replace)" || no "prose was mangled"
+grep -q "^resume $CXSID$" /tmp/fake-codex-invocations 2>/dev/null \
+  && ok "app-bundled Codex fallback launched resume with the full UUID" \
+  || no "Codex resume was not launched through the app-bundled binary"
+tmux_alive
 if bash "$PAY/teleport.sh" receive "$PAY" >/dev/null 2>&1; then no "2nd receive should have been refused"
 else ok "2nd receive refused (codex no-clobber)"; fi
+
+# Strict metadata guard: a payload whose manifest cwd disagrees with
+# session_meta must fail without leaving a destination rollout.
+BADSID="44444444-4444-4444-4444-444444444444"
+BADBASE="rollout-2026-07-01T12-30-00-$BADSID.jsonl"
+BADPAY="$(mktemp -d)"
+python3 - "$BADPAY/$BADBASE" "$(rp "$HOME/work/lima")" "$BADSID" <<'PY'
+import json, sys
+path, cwd, sid = sys.argv[1:4]
+with open(path, "w") as out:
+    out.write(json.dumps({"timestamp": "t0", "type": "session_meta",
+                          "payload": {"id": sid, "cwd": cwd}}) + "\n")
+PY
+cp "$TP" "$BADPAY/teleport.sh"
+python3 - "$BADPAY/tp.json" "$HOME/work/not-lima" "$BADSID" <<'PY'
+import json, sys
+out, wrong_cwd, sid = sys.argv[1:4]
+json.dump({"version": 1, "harness": "codex", "session_id": sid, "source_cwd": wrong_cwd,
+           "repo": {"url": "", "branch": "", "head": "", "has_patch": False,
+                    "has_untracked": False, "has_bundle": False},
+           "repo_name": "lima-bad"}, open(out, "w"))
+PY
+if bash "$BADPAY/teleport.sh" receive "$BADPAY" >/dev/null 2>&1; then
+  no "mismatched session_meta cwd should have failed"
+else ok "mismatched session_meta cwd rejected"; fi
+[[ ! -e "$HOME/.codex/sessions/2026/07/01/$BADBASE" ]] \
+  && ok "failed metadata validation left no rollout behind" \
+  || no "failed metadata validation left a rollout behind"
+rm -rf "$BADPAY"
 rm -rf "$PAY"
 
 # ===========================================================================

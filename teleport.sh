@@ -32,6 +32,7 @@
 #   DOTAI_TP_HOST="user@host"     # ssh target (Tailscale name/IP works)
 #   DOTAI_TP_BASE="$HOME/code"    # where repos get cloned on the target
 #   DOTAI_TP_TMUX=1               # opt-in: default off; set 1 to always use tmux here
+#   CODEX_BIN="/path/to/codex"     # optional override for Codex resume on target
 
 set -euo pipefail
 
@@ -76,6 +77,45 @@ cursor_hash_cwd() {
   local p; p="$(realpath_p "$1")"
   if command -v md5 >/dev/null 2>&1; then printf '%s' "$p" | md5 -q
   else printf '%s' "$p" | md5sum | awk '{print $1}'; fi
+}
+
+# Resolve a Codex CLI that really supports `resume`. A stale CLI can exist on
+# PATH while the current binary is bundled in Codex.app / ChatGPT.app.
+resolve_codex_bin() {
+  local candidate=""
+  for candidate in \
+    "${CODEX_BIN:-}" \
+    "$(command -v codex 2>/dev/null || true)" \
+    "$HOME/.bun/bin/codex" \
+    "/Applications/Codex.app/Contents/Resources/codex" \
+    "/Applications/ChatGPT.app/Contents/Resources/codex"
+  do
+    [[ -n "$candidate" && -x "$candidate" ]] || continue
+    if "$candidate" resume --help 2>&1 | grep -q '^Resume a previous'; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Copy one consistent Codex JSONL snapshot. A live rollout can be appended while
+# teleport reads it; retry rather than shipping a partial final JSON object.
+snapshot_codex_rollout() {
+  python3 - "$1" "$2" <<'PY'
+import json, os, sys
+src, dst = sys.argv[1:3]
+data = open(src, "rb").read()
+if not data.endswith(b"\n"):
+    raise SystemExit("rollout snapshot ended in a partial line")
+rows = [line for line in data.splitlines() if line.strip()]
+if not rows:
+    raise SystemExit("rollout snapshot is empty")
+for line in rows:
+    json.loads(line)
+with open(dst, "xb") as out:
+    out.write(data)
+PY
 }
 
 # Normalize a git remote URL to host/owner/repo so ssh and https forms match,
@@ -188,49 +228,74 @@ cmd_send() {
     # entry needed (session_index.jsonl only tracks named threads).
     local sess_root="$HOME/.codex/sessions"
     [[ -d "$sess_root" ]] || die "No Codex sessions dir ($sess_root). Has codex run here?"
-    if [[ -n "$session" ]]; then
-      sfile="$(find "$sess_root" -name "rollout-*${session}.jsonl" -type f 2>/dev/null | head -1)"
-      [[ -n "$sfile" ]] || die "Session not found: $session"
-    else
-      # Newest rollout whose session_meta cwd == this cwd.
-      sfile="$(python3 - "$sess_root" "$cwd" <<'PY'
-import json, os, sys
-root, cwd = sys.argv[1], sys.argv[2]
-best = None
+    # With an explicit UUID, the rollout metadata is the source of truth for
+    # cwd. This lets a Codex agent invoke teleport from any shell workdir while
+    # still pairing the session with the correct repo. Without an UUID, retain
+    # the original behavior: newest rollout for the current cwd.
+    local selected
+    if ! selected="$(python3 - "$sess_root" "$cwd" "$session" <<'PY'
+import json, os, re, shlex, sys
+root, invocation_cwd, requested = sys.argv[1:4]
+uuid_re = re.compile(r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$")
+
+if requested and not uuid_re.fullmatch(requested):
+    raise SystemExit("Codex --session must be a full UUID")
+
+candidates = []
 for dirp, _, files in os.walk(root):
-    for f in files:
-        if not (f.startswith("rollout-") and f.endswith(".jsonl")):
+    for name in files:
+        if not (name.startswith("rollout-") and name.endswith(".jsonl")):
             continue
-        p = os.path.join(dirp, f)
+        match = uuid_re.search(name[:-6])
+        if not match:
+            continue
+        file_uuid = match.group(1)
+        if requested and file_uuid.lower() != requested.lower():
+            continue
+        path = os.path.join(dirp, name)
         try:
-            with open(p) as fh:
-                d = json.loads(fh.readline())
-            if d.get("payload", {}).get("cwd") != cwd:
+            with open(path) as fh:
+                meta = json.loads(fh.readline())
+            payload = meta.get("payload", {})
+            sid = payload.get("id", "")
+            source_cwd = payload.get("cwd", "")
+            if meta.get("type") != "session_meta":
+                continue
+            if sid.lower() != file_uuid.lower() or not source_cwd:
+                continue
+            if not requested and os.path.realpath(source_cwd) != invocation_cwd:
                 continue
         except Exception:
             continue
-        m = os.path.getmtime(p)
-        if best is None or m > best[0]:
-            best = (m, p)
-print(best[1] if best else "")
+        candidates.append((os.path.getmtime(path), path, sid, os.path.realpath(source_cwd)))
+
+if not candidates:
+    target = requested or f"cwd {invocation_cwd}"
+    raise SystemExit(f"No valid Codex session found for {target}")
+if requested and len(candidates) != 1:
+    raise SystemExit(f"Codex session {requested} is duplicated across {len(candidates)} rollouts")
+
+_, path, sid, source_cwd = max(candidates)
+for key, value in (("sfile", path), ("session", sid), ("cwd", source_cwd)):
+    print(f"{key}={shlex.quote(value)}")
 PY
-)"
-      [[ -n "$sfile" ]] || die "No Codex sessions for this directory ($cwd).\n  Start one with: codex"
-      session="$(basename "$sfile" .jsonl)"; session="${session: -36}"   # uuid = last 36 chars
+)"; then
+      die "Could not select Codex session ${session:-for $cwd}"
     fi
+    eval "$selected"
   fi
 
   info "▶ Teleporting $harness session ${session:0:8}… from $cwd"
 
   # ---- Repo state (best-effort) ----------------------------------------
   local in_git=0 url="" branch="" head="" repo_name="" toplevel=""
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     in_git=1
-    toplevel="$(git rev-parse --show-toplevel)"
+    toplevel="$(git -C "$cwd" rev-parse --show-toplevel)"
     repo_name="$(basename "$toplevel")"
-    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
-    head="$(git rev-parse HEAD 2>/dev/null || echo '')"
-    url="$(git remote get-url origin 2>/dev/null || echo '')"
+    branch="$(git -C "$toplevel" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
+    head="$(git -C "$toplevel" rev-parse HEAD 2>/dev/null || echo '')"
+    url="$(git -C "$toplevel" remote get-url origin 2>/dev/null || echo '')"
     [[ -z "$url" ]] && warn "  · no 'origin' remote — target won't be able to clone; transcript still moves."
   else
     warn "  · not a git repo — moving the transcript only."
@@ -249,19 +314,29 @@ PY
   else
     # codex: keep the original basename — the target derives sessions/YYYY/MM/DD
     # from it and `codex resume` matches the embedded uuid.
-    cp "$sfile" "$stage/$(basename "$sfile")"
+    local codex_snapshot="$stage/$(basename "$sfile")" snapshot_ok=0 attempt
+    for attempt in 1 2 3; do
+      rm -f "$codex_snapshot"
+      if snapshot_codex_rollout "$sfile" "$codex_snapshot"; then
+        snapshot_ok=1
+        break
+      fi
+      sleep 0.1
+    done
+    [[ "$snapshot_ok" == 1 ]] || die "Could not capture a complete Codex rollout after 3 attempts"
   fi
   cp "$REPO_ROOT/teleport.sh" "$stage/teleport.sh"   # self-contained receiver
 
   local has_patch=false has_untracked=false
   if [[ "$in_git" == 1 ]]; then
-    if git diff HEAD --binary > "$stage/uncommitted.patch" 2>/dev/null && [[ -s "$stage/uncommitted.patch" ]]; then
+    if git -C "$toplevel" diff HEAD --binary > "$stage/uncommitted.patch" 2>/dev/null && [[ -s "$stage/uncommitted.patch" ]]; then
       has_patch=true
     else rm -f "$stage/uncommitted.patch"; fi
     # Untracked (respecting .gitignore)
-    if git ls-files --others --exclude-standard -z | grep -qz .; then
-      git ls-files --others --exclude-standard -z \
-        | tar --null -czf "$stage/untracked.tar.gz" -T - 2>/dev/null && has_untracked=true
+    if git -C "$toplevel" ls-files --others --exclude-standard -z | grep -qz .; then
+      ( cd "$toplevel"
+        git ls-files --others --exclude-standard -z \
+          | tar --null -czf "$stage/untracked.tar.gz" -T - 2>/dev/null ) && has_untracked=true
     fi
   fi
 
@@ -276,7 +351,7 @@ PY
   # made — ensure_head() finds HEAD via plain `git fetch origin` instead.
   local has_bundle=false
   if [[ "$in_git" == 1 && -n "$head" ]]; then
-    if git bundle create "$stage/commits.bundle" HEAD --not --remotes >/dev/null 2>&1; then
+    if git -C "$toplevel" bundle create "$stage/commits.bundle" HEAD --not --remotes >/dev/null 2>&1; then
       has_bundle=true
     else rm -f "$stage/commits.bundle"; fi
   fi
@@ -340,6 +415,11 @@ PY
 )"
 
   case "$HARNESS" in claude|cursor|codex) ;; *) die "receive: unsupported harness '$HARNESS'" ;; esac
+  local codex_bin=""
+  if [[ "$HARNESS" == "codex" ]]; then
+    codex_bin="$(resolve_codex_bin)" || die \
+      "No compatible Codex CLI on the target. Install/login to Codex or set CODEX_BIN in ~/.dotai.conf."
+  fi
 
   # Resolve the base where the repo lands on THIS (target) machine.
   # --into <dir> (carried as DOTAI_TP_DEST) overrides the configured DOTAI_TP_BASE.
@@ -472,26 +552,50 @@ PY
       die "A Codex session with id $SID already exists on the target:\n  $dst\n  Refusing to overwrite (no clobber). Delete it first if you really want to replace it."
     fi
     mkdir -p "$ddir"
-    python3 - "$rsrc" "$dst" "$SRC_CWD" "$tcwd" <<'PY'
-import json, sys
-src, dst, old, new = sys.argv[1:5]
-n = 0
-with open(src) as f, open(dst, "w") as o:
-    for line in f:
-        line = line.rstrip("\n")
-        if not line:
-            continue
-        try:
-            d = json.loads(line)
-        except Exception:
-            o.write(line + "\n"); continue
-        # Rewrite ONLY the structured session_meta cwd — never blanket-replace prose.
-        if d.get("type") == "session_meta" and d.get("payload", {}).get("cwd") == old:
-            d["payload"]["cwd"] = new; n += 1
-        o.write(json.dumps(d) + "\n")
-print(f"  · rollout placed ({n} cwd refs rewritten)")
+    python3 - "$rsrc" "$dst" "$SRC_CWD" "$tcwd" "$SID" <<'PY'
+import json, os, re, sys
+src, dst, old, new, sid = sys.argv[1:6]
+match = re.search(
+    r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\.jsonl$",
+    os.path.basename(src),
+)
+if not match or match.group(1).lower() != sid.lower():
+    raise SystemExit("rollout filename UUID does not match manifest session id")
+
+rows = []
+rewritten = 0
+for raw in open(src):
+    if not raw.strip():
+        continue
+    row = json.loads(raw)
+    if row.get("type") == "session_meta":
+        payload = row.get("payload", {})
+        if payload.get("id", "").lower() != sid.lower():
+            raise SystemExit("session_meta id does not match manifest session id")
+        if payload.get("cwd") != old:
+            raise SystemExit("session_meta cwd does not match manifest source cwd")
+        payload["cwd"] = new
+        rewritten += 1
+    rows.append(row)
+
+if rewritten != 1:
+    raise SystemExit(f"expected exactly one session_meta cwd rewrite, got {rewritten}")
+
+fd = os.open(dst, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+try:
+    with os.fdopen(fd, "w") as out:
+        for row in rows:
+            out.write(json.dumps(row) + "\n")
+except Exception:
+    try:
+        os.unlink(dst)
+    except FileNotFoundError:
+        pass
+    raise
+print("  · rollout placed (1 cwd ref rewritten)")
 PY
-    resume_cmd="codex resume $SID"
+    resume_cmd="$(printf '%q' "$codex_bin") resume $(printf '%q' "$SID")"
   fi
 
   # ---- Optionally land it in tmux for mosh reattach --------------------

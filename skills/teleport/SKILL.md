@@ -1,6 +1,6 @@
 ---
 name: teleport
-description: Move THIS live Claude Code conversation to another machine and keep working there. Trigger when the user says "teleport yourself / this session to the mini", "send this conversation to <host>", "I'm closing the lid, move this to my server", or asks to continue the same thread on a different computer. Packages the current session + repo state (committed + uncommitted + untracked + local-only commits), clones or worktrees the repo on the target, and prints the command to resume the same thread there (optionally inside tmux). Reads the target host from .dotai.conf when present — does not ask for or invent one.
+description: Move THIS live Claude Code or Codex conversation to another machine and keep working there. Trigger when the user asks to teleport this session to the mini, send the conversation to another host, close the laptop and move to a server, or continue the same thread on a different computer. Packages the current session plus repo state, clones or worktrees the repo on the target, and prints the exact resume command. Reads the target host from .dotai.conf when present.
 allowed-tools: Bash(dotai *) Bash(*/dotai *) Bash(*/teleport.sh *) Bash(ssh *) Bash(git *) Bash(cat *) Bash(ls *)
 ---
 
@@ -23,23 +23,29 @@ On the target the repo is matched **by remote URL**, not by folder name:
   `tp/<stamp>` branch under `~/code/.tp/<repo>/`. The existing checkout is never
   touched, so work in progress on the target isn't obstructed.
 
-Then it places the transcript and pre-accepts the trust dialog. By default it
-just prints the `claude -r` command to resume; pass `--tmux` to land the session
-in a **tmux** session you can reattach from your phone over mosh.
+Then it places the session in the target harness's native store. By default it
+prints the exact `claude -r` or `codex resume` command; pass `--tmux` to start
+the resumed session inside tmux.
 
 ## How to run it
 
-1. **Confirm this is Claude Code.** The session id is in the environment:
+1. **Detect the current harness and full session id.**
+
+   Claude Code:
    ```bash
-   echo "${CLAUDE_CODE_SESSION_ID:?not a Claude Code session}"
+   test -n "${CLAUDE_CODE_SESSION_ID:-}"
    ```
-   (Codex isn't supported yet — teleport will say so.)
 
-2. **Run from the repo where this conversation is happening** (the cwd Claude
-   was launched in). Teleport finds the session under that directory's project
-   folder. If you `cd`'d elsewhere, go back to the repo root first.
+   Codex:
+   ```bash
+   test -n "${CODEX_THREAD_ID:-}"
+   ```
 
-3. **Resolve the target host — let the engine read the config; don't re-derive it.**
+   Use the matching variable verbatim. Never guess or shorten the id. With a
+   Codex UUID, teleport reads the session's recorded cwd and packages the
+   correct repo even if the shell command runs from another directory.
+
+2. **Resolve the target host through the engine; do not re-derive it.**
    The engine (`teleport.sh`) already loads `DOTAI_TP_HOST` from `.dotai.conf` next to
    the script, then from `$HOME`. **Do not grep for the config yourself** — you'd look in
    the working directory (where the conversation lives, e.g. some product repo) and miss the
@@ -54,16 +60,19 @@ in a **tmux** session you can reattach from your phone over mosh.
    fails when the mini's user is `minisat`). The full `user@host` comes from the config (via
    the engine) or from what the user literally typed — nowhere else.
 
-4. **Locate dotai and send**, passing this exact session so there's no guessing.
-   Omit the host when it comes from `.dotai.conf`:
+3. **Locate dotai and send the exact session.** Omit the host when it comes
+   from `.dotai.conf`:
    ```bash
    DOTAI="$(command -v dotai || echo "$HOME/code/dotai/dotai")"
-   "$DOTAI" tp --session "$CLAUDE_CODE_SESSION_ID"             # host from .dotai.conf
-   # …or, ONLY if the user named one explicitly:
-   "$DOTAI" tp user@host --session "$CLAUDE_CODE_SESSION_ID"
+   if [ -n "${CODEX_THREAD_ID:-}" ]; then
+     "$DOTAI" tp --harness codex --session "$CODEX_THREAD_ID"
+   else
+     "$DOTAI" tp --harness claude --session "${CLAUDE_CODE_SESSION_ID:?}"
+   fi
    ```
-   By default it just places the session and prints the `claude -r` command to
-   resume. Add `--tmux` only if the user asks for tmux (for mosh reattach).
+
+   If the user explicitly named a full `user@host`, place it immediately after
+   `tp`. Add `--tmux` only when the user requests tmux.
 
    **Routing the destination.** By default the repo lands under `~/code` on the
    target. If the user says where it should go ("put it in my work folder"),
@@ -71,9 +80,11 @@ in a **tmux** session you can reattach from your phone over mosh.
    on the target — so a `~` or `$HOME` doesn't get expanded on the source by
    mistake. Absolute paths work too.
 
-5. **Relay the output verbatim** — by default it prints the resume command:
+4. **Relay the output verbatim.** It prints the target path and native resume
+   command:
    ```
-   cd <target-path> && claude -r <session-id>   # on the target
+   cd <target-path> && claude -r <session-id>
+   cd <target-path> && /resolved/path/codex resume <session-id>
    ```
    With `--tmux` it instead prints how to reattach:
    ```
@@ -93,6 +104,9 @@ in a **tmux** session you can reattach from your phone over mosh.
   location, teleport refuses rather than overwrite. Nothing is destroyed.
 - **Private repos** must be reachable from the target (its own credentials). If
   the clone can't authenticate there, the transcript still moves.
+- **Target harness required.** Codex teleport resolves a CLI that actually
+  supports `resume`, including the binary bundled in Codex.app or ChatGPT.app,
+  and stops before placing anything if none exists. The target must be logged in.
 
 ## Safety
 

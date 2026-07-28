@@ -13,6 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # non-interactive ssh (sshd's exec PATH includes /usr/bin).
 RUN printf '#!/bin/sh\nexec sleep 3600\n' > /usr/bin/claude && chmod +x /usr/bin/claude
 
+# Fake a current app-bundled Codex while intentionally leaving `codex` absent
+# from PATH. This covers the real macOS setup where ChatGPT.app owns the usable
+# CLI and a stale or missing shell command must not break resume.
+RUN mkdir -p /Applications/ChatGPT.app/Contents/Resources
+COPY fake-codex /Applications/ChatGPT.app/Contents/Resources/codex
+RUN chmod +x /Applications/ChatGPT.app/Contents/Resources/codex
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

@@ -1,15 +1,17 @@
 # Teleport for Codex — design note
 
-> **Status: implemented and VALIDATED (2026-07-01).** `dotai tp --harness codex`
+> **Status: implemented and VALIDATED.** `dotai tp --harness codex`
 > moves the newest Codex rollout for the current cwd. Grounded against
-> codex-cli 0.142.5 (bundled in Codex.app) on the mini: the format below held,
+> codex-cli 0.142.5 and revalidated against 0.146.0 (bundled in ChatGPT.app):
+> the format below held,
 > and the open question is answered — **resume is global by UUID** (a session
 > absent from `session_index.jsonl` still resumes from any cwd; the index only
 > tracks named threads). A **real round-trip** placed a rollout with its
 > `session_meta` cwd rewritten and `codex exec resume <uuid>` recalled a
 > pre-teleport marker from conversation memory. e2e scenario L covers the
-> pipeline in the Docker sandbox. Requirement: the target needs codex
-> installed and logged in.
+> pipeline in the Docker sandbox. The target needs Codex installed and logged
+> in; teleport resolves a compatible binary from PATH or the Codex.app /
+> ChatGPT.app bundles.
 
 ## Goal
 
@@ -40,25 +42,22 @@ different directory, and it recalled the conversation.
 
 ## Implementation sketch
 
-1. **send** (`--harness codex`): find the rollout for the current cwd (newest, or
-   `--session <uuid>`), stage it with the existing repo payload, ship.
+1. **send** (`--harness codex`): find the rollout for the current cwd, or use a
+   full `--session <uuid>` and take its recorded cwd as the source of truth.
+   Capture a complete JSONL snapshot, stage it with the existing repo payload,
+   and ship.
 2. **receive**: place the rollout under `~/.codex/sessions/YYYY/MM/DD/` on the
-   target, rewrite **only** `payload.cwd` on the first line to the worktree path,
-   then print the real `codex resume <uuid>` command. Reuse clone/worktree as-is.
-3. **skill**: add a Codex detection path (today it asserts `$CLAUDE_CODE_SESSION_ID`).
-4. **tests**: add a Codex scenario using a captured real rollout fixture; assert
-   placement against where `codex resume` actually looks — **not** against our own
-   placement function (the non-circular lesson from the Claude encoding bug).
+   target, require exactly one matching `session_meta`, rewrite **only**
+   `payload.cwd` to the worktree path, then print the resolved
+   `codex resume <uuid>` command. Reuse clone/worktree as-is.
+3. **skill**: detect `$CODEX_THREAD_ID` and pass the full UUID without guessing.
+4. **tests**: use a captured-format rollout fixture; cover placement, strict
+   metadata validation, no-clobber, and execution through an app-bundled Codex
+   binary that is intentionally absent from PATH.
 
 ## Test plan (real, end-to-end)
 
-- **codex + auth on the mini:** install codex on the mini and **copy
-  `~/.codex/auth.json` from the MacBook** (decided 2026-06-23) so resume can run.
-- Teleport a throwaway Codex session MacBook→mini with a secret token; run
-  `codex resume <uuid>` on the mini; confirm it resumes carrying the token. Same bar
+- **codex + auth on the mini:** install and log in to Codex on the mini.
+- Teleport a throwaway Codex session MacBook→mini with a unique marker; run
+  `codex resume <uuid>` on the mini; confirm it resumes carrying the marker. Same bar
   Claude teleport met.
-
-## Where to start next session
-
-Grounding is done (format, cwd location, session id, rollout path). Pending: the
-resume-lookup mechanism (above), then implement + validate end-to-end. Start here.
