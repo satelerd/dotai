@@ -147,9 +147,9 @@ Everything is additive: it refuses to overwrite an existing session (no-clobber)
 
 **tmux is opt-in.** Pass `--tmux` (or set `DOTAI_TP_TMUX=1` in `.dotai.conf` for a machine that always wants it) to land the session inside a tmux session you can reattach from your phone over mosh.
 
-**Let an agent teleport itself.** The `teleport` skill lets Claude move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` and runs the send for you.
+**Let an agent teleport itself.** The `teleport` skill lets Claude Code or Codex move its own session when you ask ("teleport yourself to the mini") — it reads `$CLAUDE_CODE_SESSION_ID` or `$CODEX_THREAD_ID` and runs the correct harness path.
 
-**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, the no-clobber guard, and the cursor-agent packaging/placement path.
+**Tests:** `tests/run.sh` spins up a throwaway Docker sandbox and runs the e2e suite (real ssh/rsync/git, never your `$HOME`): fresh clone, worktree-on-existing, URL matching, local-commit-via-bundle, the combined worktree+bundle path, no-clobber, Cursor packaging, and Codex metadata/resume-binary validation.
 
 **Known limits**
 

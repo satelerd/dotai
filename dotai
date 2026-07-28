@@ -37,7 +37,8 @@ dotai — dotfiles + teleport for your AI harness.
 Examples:
   dotai tp                       # send latest session to your default host
   dotai tp user@mini             # explicit host
-  dotai tp --session ab12… mini  # a specific conversation
+  dotai tp --session <full-id> mini  # a specific conversation
+  dotai tp mini --harness codex --session "\$CODEX_THREAD_ID"
   dotai tp mini --into work      # land it in ~/work on the target
 EOF
     exit 1 ;;
